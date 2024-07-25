@@ -286,6 +286,10 @@ reg[6:0] VelLut[0:127] = '{
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
+reg[2:0] dtTableFMP[7] = '{
+  7,6,5,0,1,2,3
+};
+
 reg[2:0] rst_timer = 1; 
 
 wire [7:0] snd_d_out;
@@ -1348,30 +1352,78 @@ always @ (posedge clk) begin
 									patch_index[i] <= 2;
 								end
 								2, 12, 22, 32 : begin
-									myvalue <= ((GenPatch[((patch_sel_reg[i]*42)+patch_index[i])+1]) << 4) | (GenPatch[((patch_sel_reg[i]*42)+patch_index[i])] & 'hF); //Detune Multiplier
+									myvalue <= (dtTableFMP[(GenPatch[((patch_sel_reg[i]*42)+patch_index[i])+1])] << 4) | (GenPatch[((patch_sel_reg[i]*42)+patch_index[i])] & 'hF); //Detune Multiplier
 									patch_index[i] <= patch_index[i] + 2;
 								end
+								/*12 : begin
+									myvalue <= (dtTableFMP[(GenPatch[((patch_sel_reg[i]*42)+patch_index[i]+10)+1])] << 4) | (GenPatch[((patch_sel_reg[i]*42)+patch_index[i]+10)] & 'hF); //Detune Multiplier
+									patch_index[i] <= patch_index[i] + 2;
+								end
+								22 : begin
+									myvalue <= (dtTableFMP[(GenPatch[((patch_sel_reg[i]*42)+patch_index[i]-10)+1])] << 4) | (GenPatch[((patch_sel_reg[i]*42)+patch_index[i]-10)] & 'hF); //Detune Multiplier
+									patch_index[i] <= patch_index[i] + 2;
+								end*/
 								4, 14, 24, 34 : begin
 									myvalue <= GenPatch[((patch_sel_reg[i]*42)+patch_index[i])] & 'h7F; //Total Level
 									patch_index[i] <= patch_index[i] + 1;
 								end
+								/*14 : begin
+									myvalue <= GenPatch[((patch_sel_reg[i]*42)+patch_index[i]+10)] & 'h7F; //Total Level
+									patch_index[i] <= patch_index[i] + 1;
+								end
+								24 : begin
+									myvalue <= GenPatch[((patch_sel_reg[i]*42)+patch_index[i]-10)] & 'h7F; //Total Level
+									patch_index[i] <= patch_index[i] + 1;
+								end*/
 								5, 15, 25, 35 : begin
 									myvalue <= (GenPatch[((patch_sel_reg[i]*42)+patch_index[i])] << 6) | ((GenPatch[((patch_sel_reg[i]*42)+patch_index[i])+1]) & 'h1F); //RS AR
 									patch_index[i] <= patch_index[i] + 2;
 								end
+								/*15 : begin
+									myvalue <= (GenPatch[((patch_sel_reg[i]*42)+patch_index[i]+10)] << 6) | ((GenPatch[((patch_sel_reg[i]*42)+patch_index[i]+10)+1]) & 'h1F); //RS AR
+									patch_index[i] <= patch_index[i] + 2;
+								end
+								25 : begin
+									myvalue <= (GenPatch[((patch_sel_reg[i]*42)+patch_index[i]-10)] << 6) | ((GenPatch[((patch_sel_reg[i]*42)+patch_index[i]-10)+1]) & 'h1F); //RS AR
+									patch_index[i] <= patch_index[i] + 2;
+								end*/
 								7, 17, 27, 37 : begin
 									myvalue <= (0 << 7) | (GenPatch[((patch_sel_reg[i]*42)+patch_index[i])] & 'h1F); //Amplitude by LFO D1R
 									patch_index[i] <= patch_index[i] + 1;
 								end
+								/*17 : begin
+									myvalue <= (0 << 7) | (GenPatch[((patch_sel_reg[i]*42)+patch_index[i]+10)] & 'h1F); //Amplitude by LFO D1R
+									patch_index[i] <= patch_index[i] + 1;
+								end
+								27 : begin
+									myvalue <= (0 << 7) | (GenPatch[((patch_sel_reg[i]*42)+patch_index[i]-10)] & 'h1F); //Amplitude by LFO D1R
+									patch_index[i] <= patch_index[i] + 1;
+								end*/
 								8, 18, 28, 38 : begin
 									myvalue <= (GenPatch[((patch_sel_reg[i]*42)+patch_index[i])] & 'h1F); //D2R
 									patch_index[i] <= patch_index[i] + 1;
 								end
+								/*18 : begin
+									myvalue <= (GenPatch[((patch_sel_reg[i]*42)+patch_index[i]+10)] & 'h1F); //D2R
+									patch_index[i] <= patch_index[i] + 1;
+								end
+								28 : begin
+									myvalue <= (GenPatch[((patch_sel_reg[i]*42)+patch_index[i]-10)] & 'h1F); //D2R
+									patch_index[i] <= patch_index[i] + 1;
+								end*/
 								9, 19, 29, 39 : begin
 									myvalue <= ((GenPatch[((patch_sel_reg[i]*42)+patch_index[i])+1]) << 4) | (GenPatch[((patch_sel_reg[i]*42)+patch_index[i])] & 'hF); //D1L RR
 									patch_index[i] <= patch_index[i] + 3;
 									if (patch_index[i] == 39) patch_index[i] <= 40; //wav_ram_sent <= 1;
 								end
+								/*19 : begin
+									myvalue <= ((GenPatch[((patch_sel_reg[i]*42)+patch_index[i]+10)+1]) << 4) | (GenPatch[((patch_sel_reg[i]*42)+patch_index[i]+10)] & 'hF); //D1L RR
+									patch_index[i] <= patch_index[i] + 3;
+								end
+								29 : begin
+									myvalue <= ((GenPatch[((patch_sel_reg[i]*42)+patch_index[i]-10)+1]) << 4) | (GenPatch[((patch_sel_reg[i]*42)+patch_index[i]-10)] & 'hF); //D1L RR
+									patch_index[i] <= patch_index[i] + 3;
+								end*/
 								40 : begin
 									myvalue <= 'hC0;
 									patch_sent[i] <= 1;
