@@ -1355,75 +1355,27 @@ always @ (posedge clk) begin
 									myvalue <= (dtTableFMP[(GenPatch[((patch_sel_reg[i]*42)+patch_index[i])+1])] << 4) | (GenPatch[((patch_sel_reg[i]*42)+patch_index[i])] & 'hF); //Detune Multiplier
 									patch_index[i] <= patch_index[i] + 2;
 								end
-								/*12 : begin
-									myvalue <= (dtTableFMP[(GenPatch[((patch_sel_reg[i]*42)+patch_index[i]+10)+1])] << 4) | (GenPatch[((patch_sel_reg[i]*42)+patch_index[i]+10)] & 'hF); //Detune Multiplier
-									patch_index[i] <= patch_index[i] + 2;
-								end
-								22 : begin
-									myvalue <= (dtTableFMP[(GenPatch[((patch_sel_reg[i]*42)+patch_index[i]-10)+1])] << 4) | (GenPatch[((patch_sel_reg[i]*42)+patch_index[i]-10)] & 'hF); //Detune Multiplier
-									patch_index[i] <= patch_index[i] + 2;
-								end*/
 								4, 14, 24, 34 : begin
 									myvalue <= GenPatch[((patch_sel_reg[i]*42)+patch_index[i])] & 'h7F; //Total Level
 									patch_index[i] <= patch_index[i] + 1;
 								end
-								/*14 : begin
-									myvalue <= GenPatch[((patch_sel_reg[i]*42)+patch_index[i]+10)] & 'h7F; //Total Level
-									patch_index[i] <= patch_index[i] + 1;
-								end
-								24 : begin
-									myvalue <= GenPatch[((patch_sel_reg[i]*42)+patch_index[i]-10)] & 'h7F; //Total Level
-									patch_index[i] <= patch_index[i] + 1;
-								end*/
 								5, 15, 25, 35 : begin
 									myvalue <= (GenPatch[((patch_sel_reg[i]*42)+patch_index[i])] << 6) | ((GenPatch[((patch_sel_reg[i]*42)+patch_index[i])+1]) & 'h1F); //RS AR
 									patch_index[i] <= patch_index[i] + 2;
 								end
-								/*15 : begin
-									myvalue <= (GenPatch[((patch_sel_reg[i]*42)+patch_index[i]+10)] << 6) | ((GenPatch[((patch_sel_reg[i]*42)+patch_index[i]+10)+1]) & 'h1F); //RS AR
-									patch_index[i] <= patch_index[i] + 2;
-								end
-								25 : begin
-									myvalue <= (GenPatch[((patch_sel_reg[i]*42)+patch_index[i]-10)] << 6) | ((GenPatch[((patch_sel_reg[i]*42)+patch_index[i]-10)+1]) & 'h1F); //RS AR
-									patch_index[i] <= patch_index[i] + 2;
-								end*/
 								7, 17, 27, 37 : begin
 									myvalue <= (0 << 7) | (GenPatch[((patch_sel_reg[i]*42)+patch_index[i])] & 'h1F); //Amplitude by LFO D1R
 									patch_index[i] <= patch_index[i] + 1;
 								end
-								/*17 : begin
-									myvalue <= (0 << 7) | (GenPatch[((patch_sel_reg[i]*42)+patch_index[i]+10)] & 'h1F); //Amplitude by LFO D1R
-									patch_index[i] <= patch_index[i] + 1;
-								end
-								27 : begin
-									myvalue <= (0 << 7) | (GenPatch[((patch_sel_reg[i]*42)+patch_index[i]-10)] & 'h1F); //Amplitude by LFO D1R
-									patch_index[i] <= patch_index[i] + 1;
-								end*/
 								8, 18, 28, 38 : begin
 									myvalue <= (GenPatch[((patch_sel_reg[i]*42)+patch_index[i])] & 'h1F); //D2R
 									patch_index[i] <= patch_index[i] + 1;
 								end
-								/*18 : begin
-									myvalue <= (GenPatch[((patch_sel_reg[i]*42)+patch_index[i]+10)] & 'h1F); //D2R
-									patch_index[i] <= patch_index[i] + 1;
-								end
-								28 : begin
-									myvalue <= (GenPatch[((patch_sel_reg[i]*42)+patch_index[i]-10)] & 'h1F); //D2R
-									patch_index[i] <= patch_index[i] + 1;
-								end*/
 								9, 19, 29, 39 : begin
 									myvalue <= ((GenPatch[((patch_sel_reg[i]*42)+patch_index[i])+1]) << 4) | (GenPatch[((patch_sel_reg[i]*42)+patch_index[i])] & 'hF); //D1L RR
 									patch_index[i] <= patch_index[i] + 3;
 									if (patch_index[i] == 39) patch_index[i] <= 40; //wav_ram_sent <= 1;
 								end
-								/*19 : begin
-									myvalue <= ((GenPatch[((patch_sel_reg[i]*42)+patch_index[i]+10)+1]) << 4) | (GenPatch[((patch_sel_reg[i]*42)+patch_index[i]+10)] & 'hF); //D1L RR
-									patch_index[i] <= patch_index[i] + 3;
-								end
-								29 : begin
-									myvalue <= ((GenPatch[((patch_sel_reg[i]*42)+patch_index[i]-10)+1]) << 4) | (GenPatch[((patch_sel_reg[i]*42)+patch_index[i]-10)] & 'hF); //D1L RR
-									patch_index[i] <= patch_index[i] + 3;
-								end*/
 								40 : begin
 									myvalue <= 'hC0;
 									patch_sent[i] <= 1;
@@ -1463,26 +1415,26 @@ always @ (posedge clk) begin
 								4 : begin
 									if (!car2[i]) begin
 										myvalue <= 'h48 + (i) - ((i) > 2? 3 : 0);
-										car2[i] <= 1;
+										//car2[i] <= 1;
 									end
 									else begin
 										myvalue <= 'h4C + (i) - ((i) > 2? 3 : 0);
-										vel_ready[i] <= 1;
+										//vel_ready[i] <= 1;
 									end
 								end
 								5, 6 : begin
 									case(car3[i])
 										0 : begin
 											myvalue <= 'h44 + (i) - ((i) > 2? 3 : 0);
-											car3[i] <= 1;
+											//car3[i] <= 1;
 										end
 										1 : begin
 											myvalue <= 'h48 + (i) - ((i) > 2? 3 : 0);
-											car3[i] <= 2;
+											//car3[i] <= 2;
 										end
 										2 : begin
 											myvalue <= 'h4C + (i) - ((i) > 2? 3 : 0);
-											vel_ready[i] <= 1;
+											//vel_ready[i] <= 1;
 										end
 									endcase
 								end
@@ -1490,19 +1442,19 @@ always @ (posedge clk) begin
 									case(car4[i])
 										0 : begin
 											myvalue <= 'h40 + (i) - ((i) > 2? 3 : 0);
-											car4[i] <= 1;
+											//car4[i] <= 1;
 										end
 										1 : begin
 											myvalue <= 'h44 + (i) - ((i) > 2? 3 : 0);
-											car4[i] <= 2;
+											//car4[i] <= 2;
 										end
 										2 : begin
 											myvalue <= 'h48 + (i) - ((i) > 2? 3 : 0);
-											car4[i] <= 3;
+											//car4[i] <= 3;
 										end
 										3 : begin
 											myvalue <= 'h4C + (i) - ((i) > 2? 3 : 0);
-											vel_ready[i] <= 1;
+											//vel_ready[i] <= 1;
 										end
 									endcase
 								end
@@ -1510,8 +1462,59 @@ always @ (posedge clk) begin
 						end
 						else begin
 							myaddress <= (i) < 3? 1 : 3;
-							myvalue <= VelLut[velocity_reg[i]];
-							if (vel_ready[i]) vel_sent[i] <= 1;
+							case(GenPatch[patch_sel_reg[i]*42])
+								0, 1, 2, 3, : begin
+									myvalue <= VelLut[velocity_reg[i]] + (velocity_reg[i] > GenPatch[(patch_sel_reg[i]*42)+34]? GenPatch[(patch_sel_reg[i]*42)+34] : velocity_reg[i]);
+									vel_sent[i] <= 1;
+								end
+								4 : begin
+									if (!car2[i]) begin
+										myvalue <= VelLut[velocity_reg[i]] + (velocity_reg[i] > GenPatch[(patch_sel_reg[i]*42)+24]? GenPatch[(patch_sel_reg[i]*42)+24] : velocity_reg[i]);
+										car2[i] <= 1;
+									end
+									else begin
+										myvalue <= VelLut[velocity_reg[i]] + (velocity_reg[i] > GenPatch[(patch_sel_reg[i]*42)+34]? GenPatch[(patch_sel_reg[i]*42)+34] : velocity_reg[i]);
+										vel_sent[i] <= 1;
+									end
+								end
+								5, 6 : begin
+									case(car3[i])
+										0 : begin
+											myvalue <= VelLut[velocity_reg[i]] + (velocity_reg[i] > GenPatch[(patch_sel_reg[i]*42)+14]? GenPatch[(patch_sel_reg[i]*42)+14] : velocity_reg[i]);
+											car3[i] <= 1;
+										end
+										1 : begin
+											myvalue <= VelLut[velocity_reg[i]] + (velocity_reg[i] > GenPatch[(patch_sel_reg[i]*42)+24]? GenPatch[(patch_sel_reg[i]*42)+24] : velocity_reg[i]);
+											car3[i] <= 2;
+										end
+										2 : begin
+											myvalue <= VelLut[velocity_reg[i]] + (velocity_reg[i] > GenPatch[(patch_sel_reg[i]*42)+34]? GenPatch[(patch_sel_reg[i]*42)+34] : velocity_reg[i]);
+											vel_sent[i] <= 1;
+										end
+									endcase
+								end
+								7 : begin
+									case(car4[i])
+										0 : begin
+											myvalue <= VelLut[velocity_reg[i]] + (velocity_reg[i] > GenPatch[(patch_sel_reg[i]*42)+4]? GenPatch[(patch_sel_reg[i]*42)+4] : velocity_reg[i]);
+											car4[i] <= 1;
+										end
+										1 : begin
+											myvalue <= VelLut[velocity_reg[i]] + (velocity_reg[i] > GenPatch[(patch_sel_reg[i]*42)+14]? GenPatch[(patch_sel_reg[i]*42)+14] : velocity_reg[i]);
+											car4[i] <= 2;
+										end
+										2 : begin
+											myvalue <= VelLut[velocity_reg[i]] + (velocity_reg[i] > GenPatch[(patch_sel_reg[i]*42)+24]? GenPatch[(patch_sel_reg[i]*42)+24] : velocity_reg[i]);
+											car4[i] <= 3;
+										end
+										3 : begin
+											myvalue <= VelLut[velocity_reg[i]] + (velocity_reg[i] > GenPatch[(patch_sel_reg[i]*42)+34]? GenPatch[(patch_sel_reg[i]*42)+34] : velocity_reg[i]);
+											vel_sent[i] <= 1;
+										end
+									endcase
+								end
+							endcase
+							//if (vel_ready[i]) vel_sent[i] <= 1;
 						end
 						audio_wr <= 1;
 					end
