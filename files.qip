@@ -1,0 +1,43 @@
+set_global_assignment -name SYSTEMVERILOG_FILE GBMidi.sv
+set_global_assignment -name SDC_FILE GBMidi.sdc
+
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/GBMidi.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/GenMidi.sv
+set_global_assignment -name VERILOG_FILE rtl/blip_gen.v
+set_global_assignment -name VERILOG_FILE rtl/duty_switch.v
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/echo_gen.sv
+set_global_assignment -name VERILOG_FILE rtl/envelope.v
+set_global_assignment -name VERILOG_FILE rtl/envelopeW.v
+set_global_assignment -name VERILOG_FILE rtl/uart_rx.v
+set_global_assignment -name VERILOG_FILE rtl/midi_trans.v
+set_global_assignment -name VERILOG_FILE rtl/mixer.v
+set_global_assignment -name VERILOG_FILE rtl/poly_disp.v
+set_global_assignment -name VERILOG_FILE rtl/vibrato_gen.v
+set_global_assignment -name VERILOG_FILE rtl/pitchfall.v
+set_global_assignment -name VERILOG_FILE rtl/pitchfallW.v
+
+set_global_assignment -name MIF_FILE rtl/midipb_to_Genfreq_LUT.mif
+set_global_assignment -name QIP_FILE rtl/midipb_to_Genfreq_LUT.qip
+
+set_global_assignment -name VHDL_FILE rtl/gbc_snd.vhd
+set_global_assignment -name VHDL_FILE rtl/speedcontrol.vhd
+
+set_global_assignment -name QIP_FILE rtl/jt12/jt12.qip
+
+set_global_assignment -name QIP_FILE rtl/tv80/TV80.qip
+set_global_assignment -name VERILOG_FILE rtl/Aznable/charmap.v
+set_global_assignment -name VERILOG_FILE rtl/Aznable/dpram.v
+set_global_assignment -name VERILOG_FILE rtl/Aznable/dpram_w1r2.v
+set_global_assignment -name VERILOG_FILE rtl/Aznable/generic_timer.v
+set_global_assignment -name VERILOG_FILE rtl/Aznable/jtframe_vtimer.v
+set_global_assignment -name VERILOG_FILE rtl/Aznable/lfsr.v
+set_global_assignment -name VERILOG_FILE rtl/Aznable/spram.v
+set_global_assignment -name VERILOG_FILE rtl/Aznable/sprite_engine.v
+set_global_assignment -name VERILOG_FILE rtl/Aznable/system.v
+set_global_assignment -name VERILOG_FILE rtl/Aznable/tilemap.v
+
+set_global_assignment -name CDF_FILE jtag.cdf
+set_global_assignment -name QIP_FILE sys/sys.qip
+
+set_global_assignment -name VERILOG_FILE rtl/genesis_lpf.v
+set_global_assignment -name VERILOG_FILE rtl/audio_iir_filter.v
