@@ -39,7 +39,12 @@ module GenMidi
 	output  [10:0] note_out4,
     output [255:0] poly_note_out,
 
-	input patch_download,
+	input fm0_patch_download,
+	input fm1_patch_download,
+	input fm2_patch_download,
+	input fm3_patch_download,
+	input fm4_patch_download,
+	input fm5_patch_download,
 	input [7:0] ioctl_dout,
 	input ioctl_wr,
 
@@ -233,7 +238,7 @@ reg[13:0] Genfrequencies[0:95] = '{
 	}
 };*/
 
-reg[7:0] GenPatch[168] = '{
+reg[7:0] GenPatch[378] = '{
 	///JLead
 		'h00, 'h04, 
 		'h02, 'h03, 'h21, 'h00, 'h1F, 'h02, 'h01, 'h00, 'h02, 'h00,
@@ -252,6 +257,36 @@ reg[7:0] GenPatch[168] = '{
 		'h06, 'h00, 'h14, 'h00, 'h1F, 'h05, 'h06, 'h04, 'h0D, 'h00, 
 		'h02, 'h01, 'h08, 'h00, 'h1F, 'h06, 'h05, 'h07, 'h0C, 'h00, 
 		'h02, 'h05, 'h08, 'h00, 'h1F, 'h06, 'h06, 'h07, 'h0C, 'h00,
+	//Brass
+		'h05, 'h07, 
+		'h01, 'h03, 'h13, 'h01, 'h10, 'h0F, 'h04, 'h07, 'h01, 'h00,
+		'h03, 'h03, 'h12, 'h01, 'h18, 'h02, 'h00, 'h09, 'h01, 'h00, 
+		'h01, 'h03, 'h0A, 'h01, 'h12, 'h02, 'h00, 'h09, 'h00, 'h00, 
+		'h01, 'h03, 'h0A, 'h01, 'h19, 'h02, 'h00, 'h09, 'h01, 'h00,
+	//Brass
+		'h05, 'h07, 
+		'h01, 'h03, 'h13, 'h01, 'h10, 'h0F, 'h04, 'h07, 'h01, 'h00,
+		'h03, 'h03, 'h12, 'h01, 'h18, 'h02, 'h00, 'h09, 'h01, 'h00, 
+		'h01, 'h03, 'h0A, 'h01, 'h12, 'h02, 'h00, 'h09, 'h00, 'h00, 
+		'h01, 'h03, 'h0A, 'h01, 'h19, 'h02, 'h00, 'h09, 'h01, 'h00,
+	//Brass
+		'h05, 'h07, 
+		'h01, 'h03, 'h13, 'h01, 'h10, 'h0F, 'h04, 'h07, 'h01, 'h00,
+		'h03, 'h03, 'h12, 'h01, 'h18, 'h02, 'h00, 'h09, 'h01, 'h00, 
+		'h01, 'h03, 'h0A, 'h01, 'h12, 'h02, 'h00, 'h09, 'h00, 'h00, 
+		'h01, 'h03, 'h0A, 'h01, 'h19, 'h02, 'h00, 'h09, 'h01, 'h00,
+	//Brass
+		'h05, 'h07, 
+		'h01, 'h03, 'h13, 'h01, 'h10, 'h0F, 'h04, 'h07, 'h01, 'h00,
+		'h03, 'h03, 'h12, 'h01, 'h18, 'h02, 'h00, 'h09, 'h01, 'h00, 
+		'h01, 'h03, 'h0A, 'h01, 'h12, 'h02, 'h00, 'h09, 'h00, 'h00, 
+		'h01, 'h03, 'h0A, 'h01, 'h19, 'h02, 'h00, 'h09, 'h01, 'h00,
+	//Brass
+		'h05, 'h07, 
+		'h01, 'h03, 'h13, 'h01, 'h10, 'h0F, 'h04, 'h07, 'h01, 'h00,
+		'h03, 'h03, 'h12, 'h01, 'h18, 'h02, 'h00, 'h09, 'h01, 'h00, 
+		'h01, 'h03, 'h0A, 'h01, 'h12, 'h02, 'h00, 'h09, 'h00, 'h00, 
+		'h01, 'h03, 'h0A, 'h01, 'h19, 'h02, 'h00, 'h09, 'h01, 'h00,
 	//Brass
 		'h05, 'h07, 
 		'h01, 'h03, 'h13, 'h01, 'h10, 'h0F, 'h04, 'h07, 'h01, 'h00,
@@ -416,6 +451,8 @@ reg fm_on[0:5];
 reg[13:0] fm_freq[0:5];
 reg[13:0] fm_freq_pb[0:5];
 reg[3:0] i;
+reg send_custom_patch[0:5];
+reg c_patch_sent[0:5] = '{1,1,1,1,1,1};
 /*reg[7:0] custom_patch [0:41] = '{
 	'h03, 'h07, 
 	'h0D, 'h03, 'h22, 'h02, 'h1F, 'h0E, 'h00, 'h0F, 'h0D, 'h00,
@@ -423,15 +460,83 @@ reg[3:0] i;
 	'h01, 'h03, 'h18, 'h00, 'h1F, 'h0D, 'h00, 'h0F, 'h0D, 'h00, 
 	'h00, 'h03, 'h08, 'h00, 'h1F, 'h09, 'h00, 'h08, 'h0D, 'h00
 };*/
-reg[6:0] c_patch_i;
+reg[6:0] c_patch_i[0:5];
+reg[7:0] c_offset[0:5];
 
 //int i;
 always @ (posedge clk) begin
-	if (ioctl_wr & patch_download) begin
-		GenPatch[126 + c_patch_i] = ioctl_dout;
-		c_patch_i <= c_patch_i + 1;
+	if (ioctl_wr & fm0_patch_download) begin
+		GenPatch[126 + c_patch_i[0]] = ioctl_dout;
+		c_patch_i[0] <= c_patch_i[0] + 1;
+		c_patch_sent[0] <= 0;
 	end
-	if  (!patch_download) c_patch_i <= 0;
+	if (!fm0_patch_download) begin
+		c_patch_i[0] <= 0;
+		if (!c_patch_sent[0]) begin
+			send_custom_patch[0] <= 1;
+			c_patch_sent[0] <= 1;
+		end
+	end
+	if (ioctl_wr & fm1_patch_download) begin
+		GenPatch[126 + c_patch_i[1] + 42] = ioctl_dout;
+		c_patch_i[1] <= c_patch_i[1] + 1;
+		c_patch_sent[1] <= 0;
+	end
+	if (!fm1_patch_download) begin
+		c_patch_i[1] <= 0;
+		if (!c_patch_sent[1]) begin
+			send_custom_patch[1] <= 1;
+			c_patch_sent[1] <= 1;
+		end
+	end
+	if (ioctl_wr & fm2_patch_download) begin
+		GenPatch[126 + c_patch_i[2] + 84] = ioctl_dout;
+		c_patch_i[2] <= c_patch_i[2] + 1;
+		c_patch_sent[2] <= 0;
+	end
+	if (!fm2_patch_download) begin
+		c_patch_i[2] <= 0;
+		if (!c_patch_sent[2]) begin
+			send_custom_patch[2] <= 1;
+			c_patch_sent[2] <= 1;
+		end
+	end
+	if (ioctl_wr & fm3_patch_download) begin
+		GenPatch[126 + c_patch_i[3] + 126] = ioctl_dout;
+		c_patch_i[3] <= c_patch_i[3] + 1;
+		c_patch_sent[3] <= 0;
+	end
+	if (!fm3_patch_download) begin
+		c_patch_i[3] <= 0;
+		if (!c_patch_sent[3]) begin
+			send_custom_patch[3] <= 1;
+			c_patch_sent[3] <= 1;
+		end
+	end
+	if (ioctl_wr & fm4_patch_download) begin
+		GenPatch[126 + c_patch_i[4] + 168] = ioctl_dout;
+		c_patch_i[4] <= c_patch_i[4] + 1;
+		c_patch_sent[4] <= 0;
+	end
+	if (!fm4_patch_download) begin
+		c_patch_i[4] <= 0;
+		if (!c_patch_sent[4]) begin
+			send_custom_patch[4] <= 1;
+			c_patch_sent[4] <= 1;
+		end
+	end
+	if (ioctl_wr & fm5_patch_download) begin
+		GenPatch[126 + c_patch_i[5] + 210] = ioctl_dout;
+		c_patch_i[5] <= c_patch_i[5] + 1;
+		c_patch_sent[5] <= 0;
+	end
+	if (!fm5_patch_download) begin
+		c_patch_i[5] <= 0;
+		if (!c_patch_sent[5]) begin
+			send_custom_patch[5] <= 1;
+			c_patch_sent[5] <= 1;
+		end
+	end
 	if (reset) begin
     	myaddress <= 7'b0000000;
     	myvalue   <= 8'b00000000;
@@ -671,57 +776,89 @@ always @ (posedge clk) begin
 
 	if (gencen) begin
 		if (!auto_poly) begin
-			if (patch_sel_reg[0] != fm0_patch) begin
+			if (patch_sel_reg[0] != fm0_patch || send_custom_patch[0]) begin
 				patch_sent[0] <= 0;
 				patch_index[0] <= 0;
 				myaddress <= 1;
 				opoffset[0] <= 0;
 				patch_sel_reg[0] <= fm0_patch;
+				if (send_custom_patch[0]) begin
+					send_custom_patch[0] <= 0;
+					c_offset[0] <= 0; 
+				end
+				else c_offset[0] <= 0; 
 			end
-			if (patch_sel_reg[1] != fm1_patch) begin
+			if (patch_sel_reg[1] != fm1_patch || send_custom_patch[1]) begin
 				patch_sent[1] <= 0;
 				patch_index[1] <= 0;
 				myaddress <= 1;
 				opoffset[1] <= 0;
 				patch_sel_reg[1] <= fm1_patch;
+				if (send_custom_patch[1]) begin
+					send_custom_patch[1] <= 0;
+					c_offset[1] <= 42; 
+				end
+				else c_offset[1] <= 0; 
 			end
-			if (patch_sel_reg[2] != fm2_patch) begin
+			if (patch_sel_reg[2] != fm2_patch || send_custom_patch[2]) begin
 				patch_sent[2] <= 0;
 				patch_index[2] <= 0;
 				myaddress <= 1;
 				opoffset[2] <= 0;
 				patch_sel_reg[2] <= fm2_patch;
+				if (send_custom_patch[2]) begin
+					send_custom_patch[2] <= 0;
+					c_offset[2] <= 84; 
+				end
+				else c_offset[2] <= 0; 
 			end
-			if (patch_sel_reg[3] != fm3_patch) begin
+			if (patch_sel_reg[3] != fm3_patch || send_custom_patch[3]) begin
 				patch_sent[3] <= 0;
 				patch_index[3] <= 0;
 				myaddress <= 3;
 				opoffset[3] <= 0;
 				patch_sel_reg[3] <= fm3_patch;
+				if (send_custom_patch[3]) begin
+					send_custom_patch[3] <= 0;
+					c_offset[3] <= 126; 
+				end
+				else c_offset[3] <= 0; 
 			end
-			if (patch_sel_reg[4] != fm4_patch) begin
+			if (patch_sel_reg[4] != fm4_patch || send_custom_patch[4]) begin
 				patch_sent[4] <= 0;
 				patch_index[4] <= 0;
 				myaddress <= 3;
 				opoffset[4] <= 0;
 				patch_sel_reg[4] <= fm4_patch;
+				if (send_custom_patch[4]) begin
+					send_custom_patch[4] <= 0;
+					c_offset[4] <= 168; 
+				end
+				else c_offset[4] <= 0; 
 			end
-			if (patch_sel_reg[5] != fm5_patch) begin
+			if (patch_sel_reg[5] != fm5_patch || send_custom_patch[5]) begin
 				patch_sent[5] <= 0;
 				patch_index[5] <= 0;
 				myaddress <= 3;
 				opoffset[5] <= 0;
 				patch_sel_reg[5] <= fm5_patch;
+				if (send_custom_patch[5]) begin
+					send_custom_patch[5] <= 0;
+					c_offset[5] <= 210; 
+				end
+				else c_offset[5] <= 0; 
 			end
 		end
-		else if (patch_sel_reg[0] != fm0_patch) begin
+		else if (patch_sel_reg[0] != fm0_patch || patch_sel_reg[1] != fm0_patch || patch_sel_reg[2] != fm0_patch || patch_sel_reg[3] != fm0_patch || patch_sel_reg[4] != fm0_patch || patch_sel_reg[5] != fm0_patch || send_custom_patch[0]) begin
 			for (int ii = 0; ii < 6; ii = ii + 1) begin
+				c_offset[ii] <= 0; 
 				patch_sent[ii] <= 0;
 				patch_index[ii] <= 0;
 				opoffset[ii] <= 0;
 				patch_sel_reg[ii] <= fm0_patch;
 			end
 			myaddress <= 1;
+			send_custom_patch[0] <= 0;
 		end
 		///VOICE PER CHANNEL///
 		//if (!auto_poly) begin
@@ -1348,31 +1485,31 @@ always @ (posedge clk) begin
 						if (myaddress == 0 || myaddress == 2) begin
 							case(patch_index[i])
 								0 : begin
-									myvalue <= ((GenPatch[((patch_sel_reg[i]*42)+patch_index[i])+1]) << 3) | (GenPatch[((patch_sel_reg[i]*42)+patch_index[i])] & 'h7); //feedback algorithm
+									myvalue <= ((GenPatch[((patch_sel_reg[i]*42)+patch_index[i]+c_offset[i])+1]) << 3) | (GenPatch[((patch_sel_reg[i]*42)+patch_index[i]+c_offset[i])] & 'h7); //feedback algorithm
 									patch_index[i] <= 2;
 								end
 								2, 12, 22, 32 : begin
-									myvalue <= (dtTableFMP[(GenPatch[((patch_sel_reg[i]*42)+patch_index[i])+1])] << 4) | (GenPatch[((patch_sel_reg[i]*42)+patch_index[i])] & 'hF); //Detune Multiplier
+									myvalue <= (dtTableFMP[(GenPatch[((patch_sel_reg[i]*42)+patch_index[i]+c_offset[i])+1])] << 4) | (GenPatch[((patch_sel_reg[i]*42)+patch_index[i]+c_offset[i])] & 'hF); //Detune Multiplier
 									patch_index[i] <= patch_index[i] + 2;
 								end
 								4, 14, 24, 34 : begin
-									myvalue <= GenPatch[((patch_sel_reg[i]*42)+patch_index[i])] & 'h7F; //Total Level
+									myvalue <= GenPatch[((patch_sel_reg[i]*42)+patch_index[i]+c_offset[i])] & 'h7F; //Total Level
 									patch_index[i] <= patch_index[i] + 1;
 								end
 								5, 15, 25, 35 : begin
-									myvalue <= (GenPatch[((patch_sel_reg[i]*42)+patch_index[i])] << 6) | ((GenPatch[((patch_sel_reg[i]*42)+patch_index[i])+1]) & 'h1F); //RS AR
+									myvalue <= (GenPatch[((patch_sel_reg[i]*42)+patch_index[i]+c_offset[i])] << 6) | ((GenPatch[((patch_sel_reg[i]*42)+patch_index[i]+c_offset[i])+1]) & 'h1F); //RS AR
 									patch_index[i] <= patch_index[i] + 2;
 								end
 								7, 17, 27, 37 : begin
-									myvalue <= (0 << 7) | (GenPatch[((patch_sel_reg[i]*42)+patch_index[i])] & 'h1F); //Amplitude by LFO D1R
+									myvalue <= (0 << 7) | (GenPatch[((patch_sel_reg[i]*42)+patch_index[i]+c_offset[i])] & 'h1F); //Amplitude by LFO D1R
 									patch_index[i] <= patch_index[i] + 1;
 								end
 								8, 18, 28, 38 : begin
-									myvalue <= (GenPatch[((patch_sel_reg[i]*42)+patch_index[i])] & 'h1F); //D2R
+									myvalue <= (GenPatch[((patch_sel_reg[i]*42)+patch_index[i]+c_offset[i])] & 'h1F); //D2R
 									patch_index[i] <= patch_index[i] + 1;
 								end
 								9, 19, 29, 39 : begin
-									myvalue <= ((GenPatch[((patch_sel_reg[i]*42)+patch_index[i])+1]) << 4) | (GenPatch[((patch_sel_reg[i]*42)+patch_index[i])] & 'hF); //D1L RR
+									myvalue <= ((GenPatch[((patch_sel_reg[i]*42)+patch_index[i]+c_offset[i])+1]) << 4) | (GenPatch[((patch_sel_reg[i]*42)+patch_index[i]+c_offset[i])] & 'hF); //D1L RR
 									patch_index[i] <= patch_index[i] + 3;
 									if (patch_index[i] == 39) patch_index[i] <= 40; //wav_ram_sent <= 1;
 								end
@@ -1407,7 +1544,7 @@ always @ (posedge clk) begin
 					if (!audio_wr) begin
 						if (myaddress == 1 || myaddress == 3) begin
 							myaddress <= (i) < 3? 0 : 2;
-							case(GenPatch[patch_sel_reg[i]*42])
+							case(GenPatch[(patch_sel_reg[i]*42)+c_offset[i]])
 								0, 1, 2, 3, : begin
 									myvalue <= 'h4C + (i) - ((i) > 2? 3 : 0);
 									vel_ready[i] <= 1;
@@ -1462,7 +1599,7 @@ always @ (posedge clk) begin
 						end
 						else begin
 							myaddress <= (i) < 3? 1 : 3;
-							case(GenPatch[patch_sel_reg[i]*42])
+							case(GenPatch[(patch_sel_reg[i]*42)+c_offset[i]])
 								0, 1, 2, 3, : begin
 									myvalue <= VelLut[velocity_reg[i]] + (velocity_reg[i] > GenPatch[(patch_sel_reg[i]*42)+34]? GenPatch[(patch_sel_reg[i]*42)+34] : velocity_reg[i]);
 									vel_sent[i] <= 1;

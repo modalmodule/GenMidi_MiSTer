@@ -209,7 +209,7 @@ assign VIDEO_ARY = (!ar) ? 12'd3 : 12'd0;
 
 `include "build_id.v"
 localparam CONF_STR = {
-	"GBMidi;UART31250,MIDI;",
+	"GenMidi;UART31250,MIDI;",
 	"-;",
 	"D1O[2],Midi Source,USB,Din;",
 	"-,FOR USB SETUP UART (PRESS->);",
@@ -220,67 +220,39 @@ localparam CONF_STR = {
 	"-;",
 	"P1,FM0 Settings;",
 	"P1-;",
-	"P1O[21:19],Patch,Lead 1,Bass 1,Bell Lead,Custom;",  //Blank,Lead,Pad,Blip;",
-	"P1F1,TFI,Load Patch;",
-	"D3D4P1O[6:5],Duty Cycle,12.5,25,50;",
-	"D4P1O[13],Duty ctrld by ModWheel,Off,On;",
-	"P1O[15],Auto-Duty,Off,On;",
-	"P1O[14],Vibrato,Off,On;",  //0111000011000 17:5 < example patch
-	"P1O[17],Blip,Off,On;",
-	"P1O[8],Fade Out,Off,On;",
-	"d2P1O[12:9], Fade Speed,0,1,2,3,4,5,6,7,8,9;",
+	"P1O[21:19],Patch,Lead 1,Bass 1,Bell Lead,Custom;",  
+	"d3P1F1,TFI,Load Custom Patch;",
+	"P1O[14],Vibrato,Off,On;",  
 	"P1-;",
 	"P2,FM1 Settings;",
 	"P2-;",
-	"P2O[38:36],Patch,Lead 1,Bass 1,Bell Lead,Brass;", //+17
-	"D6D7P2O[23:22],Duty Cycle,12.5,25,50;",
-	"D7P2O[30],Duty ctrld by ModWheel,Off,On;",
-	"P2O[32],Auto-Duty,Off,On;",
-	"P2O[31],Vibrato,Off,On;",  //0111000011000 34:22 < example patch
-	"P2O[34],Blip,Off,On;",
-	"P2O[25],Fade Out,Off,On;",
-	"d8P2O[29:26], Fade Speed,0,1,2,3,4,5,6,7,8,9;",
+	"P2O[38:36],Patch,Lead 1,Bass 1,Bell Lead,Custom;", 
+	"P2F2,TFI,Load Custom Patch;",
+	"P2O[31],Vibrato,Off,On;",  
 	"P2-;",
 	"P3,FM2 Settings;",
 	"P3-;",
-	"P3O[51:49],Patch,Lead 1,Bass 1,Bell Lead,Brass;", //+14
-	"P3O[55:52],Waveform,Bass,Lead,Triangle,Saw,Square;", //fadespeed(4), fade_en, fallspeed(3), fall_en, blip_en, vib, wave(4)
-	"P3O[56],Vibrato,Off,On;",  //0100 1 101 1 0 0 0100 66:52 < example patch kick
-	"P3O[57],Blip,Off,On;",
-	"P3O[58],Pitch Fall,Off,On;",
-	"dEP3O[61:59], Fall Speed,0,1,2,3,4,5;",
-	"P3O[62],Fade Out,Off,On;",
-	"dAP3O[66:63], Fade Speed,0,1,2,3,4,5,6,7,8,9;",
+	"P3O[51:49],Patch,Lead 1,Bass 1,Bell Lead,Custom;", 
+	"P3F3,TFI,Load Custom Patch;",
+	"P3O[56],Vibrato,Off,On;",
 	"P3-;",
 	"P4,FM3 Settings;",
 	"P4-;",
-	"P4O[71:69],Patch,Lead 1,Bass 1,Bell Lead,Brass;", //+14
+	"P4O[71:69],Patch,Lead 1,Bass 1,Bell Lead,Custom;", 
+	"P4F4,TFI,Load Custom Patch;",
 	"P4O[78],Vibrato,Off,On;",
-	"P4O[39],Noise Type,White,Periodic;",
-	"P4O[40],Pitch Fall,Off,On;",                  //fadespeed(4), fade_en, fallspeed(3), fall_en, noi_type
-	"dDP4O[43:41], Fall Speed,0,1,2,3,4,5;",        //1001 1 010 1 0 48:39 < drum
-	"P4O[44],Fade Out,Off,On;",
-	"d9P4O[48:45], Fade Speed,0,1,2,3,4,5,6,7,8,9;",
 	"P4-;",
 	"P5,FM4 Settings;",
 	"P5-;",
-	"P5O[74:72],Patch,Lead 1,Bass 1,Bell Lead,Brass;", //+14
+	"P5O[74:72],Patch,Lead 1,Bass 1,Bell Lead,Custom;", 
+	"P5F5,TFI,Load Custom Patch;",
 	"P5O[79],Vibrato,Off,On;",
-	"P5O[39],Noise Type,White,Periodic;",
-	"P5O[40],Pitch Fall,Off,On;",                  //fadespeed(4), fade_en, fallspeed(3), fall_en, noi_type
-	"dDP5O[43:41], Fall Speed,0,1,2,3,4,5;",        //1001 1 010 1 0 48:39 < drum
-	"P5O[44],Fade Out,Off,On;",
-	"d9P5O[48:45], Fade Speed,0,1,2,3,4,5,6,7,8,9;",
 	"P5-;",
 	"P6,FM5 Settings;",
 	"P6-;",
-	"P6O[77:75],Patch,Lead 1,Bass 1,Bell Lead,Brass;", //+14
+	"P6O[77:75],Patch,Lead 1,Bass 1,Bell Lead,Custom;", 
+	"P6F6,TFI,Load Custom Patch;",
 	"P6O[80],Vibrato,Off,On;",
-	"P6O[39],Noise Type,White,Periodic;",
-	"P6O[40],Pitch Fall,Off,On;",                  //fadespeed(4), fade_en, fallspeed(3), fall_en, noi_type
-	"dDP6O[43:41], Fall Speed,0,1,2,3,4,5;",        //1001 1 010 1 0 48:39 < drum
-	"P6O[44],Fade Out,Off,On;",
-	"d9P6O[48:45], Fade Speed,0,1,2,3,4,5,6,7,8,9;",
 	"P6-;",
 	"-;",
 	"DCO[16],Echo (P1 to P2),Off,On;",
@@ -288,21 +260,6 @@ localparam CONF_STR = {
 	"-;",
 	"F0,BIN,Load BIOS;",
 	"-;",
-	/*"-;",
-	"O35,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",
-	"OGJ,Analog Video H-Pos,0,-1,-2,-3,-4,-5,-6,-7,8,7,6,5,4,3,2,1;",
-	"OKN,Analog Video V-Pos,0,-1,-2,-3,-4,-5,-6,-7,8,7,6,5,4,3,2,1;",
-	"O89,Aspect ratio,Original,Full Screen,[ARC1],[ARC2];",
-	"-;",
-	"O6,Rotate video,Off,On;",
-	"O7,Flip video,Off,On;",
-	"-;",
-	"RA,Open menu;",
-	"-;",
-	"F0,BIN,Load BIOS;",
-	"F3,BIN,Load Sprite ROM;",
-	"F4,YM,Load Music (YM5/6);",
-	"-;",*/
 	"R0,Reset;",
 	"J,A,B,X,Y,L,R,Select,Start;",
 	"V,v",`BUILD_DATE
@@ -452,9 +409,10 @@ hps_io #(.CONF_STR(CONF_STR)) hps_io
 
 	.buttons(buttons),
 	.status(status),
-	.status_in ({status[127:67], patch_set|patch2_set|patch4_set?status[66:52]:patch3, status[51:49], patch_set|patch2_set|patch3_set?status[48:39]:patch4, status[38:35], patch3_set|patch4_set?status[34:22]:patch2, status[21:18], (patch2_set|patch3_set|patch4_set?status[17:5]:patch), status[4:0]}),
+	.status_in ({status[127:0]}),
 	.status_set (patch_set | patch2_set | patch3_set | patch4_set),
-	.status_menumask({status[58],status[40],status[68]|status[67],status[7],status[62],status[44],status[25],status[32],status[30],status[16],status[15],status[13],status[8],status[3],status[5]}),
+					//status[58],status[40],status[68]|status[67],status[7],status[62],status[44],status[25],status[32],status[30],status[16],status[15],status[13],status[8],status[3],status[5]
+	.status_menumask({status[58],status[40],status[68]|status[67],status[7],status[62],(status[77:75]>2?1:0),(status[74:72]>2?1:0),(status[71:69]>2?1:0),(status[51:49]>2?1:0),status[16],(status[38:36]>2?1:0),(status[21:19]>2?1:0),status[8],status[3],status[5]}),
 	//.status_menumask({direct_video}),
 	.forced_scandoubler(forced_scandoubler),
 	.direct_video(direct_video),
@@ -624,7 +582,12 @@ assign AUDIO_R = gb_audio_r;
 assign AUDIO_S = 1;*/
 
 //Genesis Midi//
-wire patch_download = ioctl_download & (ioctl_index[5:0] == 6'h01 || (ioctl_index[7:6] == 1 && ~|ioctl_index));
+wire fm0_patch_download = ioctl_download & (ioctl_index[5:0] == 6'h01 || (ioctl_index[7:6] == 1 && ~|ioctl_index));
+wire fm1_patch_download = ioctl_download & (ioctl_index[5:0] == 6'h02 || (ioctl_index[7:6] == 1 && ~|ioctl_index));
+wire fm2_patch_download = ioctl_download & (ioctl_index[5:0] == 6'h03 || (ioctl_index[7:6] == 1 && ~|ioctl_index));
+wire fm3_patch_download = ioctl_download & (ioctl_index[5:0] == 6'h04 || (ioctl_index[7:6] == 1 && ~|ioctl_index));
+wire fm4_patch_download = ioctl_download & (ioctl_index[5:0] == 6'h05 || (ioctl_index[7:6] == 1 && ~|ioctl_index));
+wire fm5_patch_download = ioctl_download & (ioctl_index[5:0] == 6'h06 || (ioctl_index[7:6] == 1 && ~|ioctl_index));
 wire signed [15:0] FM_right;
 wire signed [15:0] FM_left;
 wire signed [15:0] FM_LPF_right;
@@ -656,7 +619,12 @@ GenMidi GenMidi
 	.note_out4(note4),
 	.poly_note_out(poly_note),
 
-	.patch_download(patch_download),
+	.fm0_patch_download(fm0_patch_download),
+	.fm1_patch_download(fm1_patch_download),
+	.fm2_patch_download(fm2_patch_download),
+	.fm3_patch_download(fm3_patch_download),
+	.fm4_patch_download(fm4_patch_download),
+	.fm5_patch_download(fm5_patch_download),
 	.ioctl_dout(ioctl_dout),
 	.ioctl_wr(ioctl_wr),
 
