@@ -463,15 +463,24 @@ always @(posedge clk_sys) begin
 	ce_2 <= !div16;
 end
 
-reg FM_CLKEN;
+reg FM_CLKEN, PSG_CLKEN;
 
 always @(negedge clk_sys) begin
 	reg [3:0] FCLKCNT = 0;
+	reg [3:0] PCLKCNT = 0;
+
 	FM_CLKEN <= 0;
 	FCLKCNT <= FCLKCNT + 1'b1;
 	if (FCLKCNT == 6) begin
 		FCLKCNT <= 0;
 		FM_CLKEN <= 1;
+	end
+
+	PSG_CLKEN <= 0;
+	PCLKCNT <= PCLKCNT + 1'b1;
+	if (PCLKCNT == 14) begin
+		PCLKCNT <= 0;
+		PSG_CLKEN <= 1;
 	end
 end
 
@@ -604,6 +613,7 @@ GenMidi GenMidi
 	.clk(clk_sys),
 	.ce(ce),
 	.gencen(FM_CLKEN),
+	.psgcen(PSG_CLKEN),
 	.reset(reset),
 	.status(status),
 
@@ -628,12 +638,16 @@ GenMidi GenMidi
 	.ioctl_dout(ioctl_dout),
 	.ioctl_wr(ioctl_wr),
 
-	.audio_l(FM_left),
-	.audio_r(FM_right)
+	.FM_audio_l(FM_left),
+	.FM_audio_r(FM_right),
+	.PSG_SND(PSG_SND)
 );
 
 wire signed [15:0] fm_adjust_l = (FM_left  << 4) + (FM_left  << 2) + (FM_left  << 1) + (FM_left  >>> 2);
 wire signed [15:0] fm_adjust_r = (FM_right << 4) + (FM_right << 2) + (FM_right << 1) + (FM_right >>> 2);
+wire signed [10:0] PSG_SND;
+
+
 
 genesis_fm_lpf fm_lpf_l
 (
@@ -654,7 +668,7 @@ genesis_fm_lpf fm_lpf_r
 wire signed [15:0] fm_select_l = (fm_adjust_l);
 wire signed [15:0] fm_select_r = (fm_adjust_r);
 
-//wire signed [10:0] psg_adjust = PSG_SND - (PSG_SND >>> 5);
+wire signed [10:0] psg_adjust = PSG_SND - (PSG_SND >>> 5);
 
 jt12_genmix genmix
 (
@@ -662,9 +676,9 @@ jt12_genmix genmix
 	.clk(clk_sys),
 	.fm_left(fm_select_l),
 	.fm_right(fm_select_r),
-	.psg_snd(0), //psg_adjust),
+	.psg_snd(psg_adjust),
 	.fm_en(1),
-	.psg_en(0),
+	.psg_en(1),
 	.snd_left(PRE_LPF_L),
 	.snd_right(PRE_LPF_R)
 );

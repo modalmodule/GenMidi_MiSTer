@@ -24,6 +24,7 @@ module GenMidi
     input          clk,
     input          ce,
     input          gencen,
+	input          psgcen,
     input          reset,
     input  [127:0] status,
 
@@ -49,8 +50,10 @@ module GenMidi
 	input ioctl_wr,
 
     // audio
-    output  [15:0] audio_l,
-    output  [15:0] audio_r
+    output  [15:0] FM_audio_l,
+    output  [15:0] FM_audio_r,
+	output [10:0] PSG_SND
+
 );
 
 assign note_out = (note_on_reg[sq1_channel]<<9) + (note_reg[sq1_channel]-36);
@@ -71,7 +74,7 @@ wire [2:0] fm0_patch = status[21:19];
 wire [1:0] duty_set = status[6:5];
 wire modtoDuty = status[13];
 wire duty_switch_en = status[15];
-wire vibrato[0:5] = '{status[14], status[31], status[56], status[78], status[79], status[80]};
+wire vibrato[0:8] = '{status[14], status[31], status[56], status[78], status[79], status[80], 1'b0, 1'b0, 1'b0};
 //vibrato[0] = status[14];
 wire blip_en = status[17];
 wire fade_en = status[8];
@@ -187,6 +190,14 @@ reg[13:0] Genfrequencies[0:95] = '{
 	11264, 11324, 11389, 11457, 11530, 11606, 11687, 11774, 11865, 11961, 12064, 12172, 
 	13312, 13372, 13437, 13505, 13578, 13654, 13735, 13822, 13913, 14009, 14112, 14220, 
 	15360, 15420, 15485, 15553, 15626, 15702, 15783, 15870, 15961, 16057, 16160, 16268
+};
+
+reg[9:0] PSGfrequencies[0:59] = '{
+	1012, 954, 900, 851, 803, 758, 715, 675, 637, 601, 568, 536, 
+	506, 477, 450, 426, 402, 379, 358, 338, 318, 300, 284, 268,
+	253, 238, 225, 213, 201, 190, 179, 169, 159, 150, 142, 134,
+	126, 119, 112, 106, 100, 95, 90, 84, 80, 75, 71, 67,
+	63, 60, 56, 53, 50, 48, 45, 42, 40, 38, 36, 34
 };
 /*
 	algorithm = 0
@@ -393,23 +404,22 @@ reg poly_kill;
 reg [3:0] last_joy = 8;
 
 //MIDI REGS
-reg note_switch;
 localparam int sq1_channel = 0; // midi channel for pulse 1, 0 = channel 1
 localparam int sq2_channel = 1; // midi channel for pulse 2, 1 = channel 2
 localparam int wav_channel = 2;
 localparam int noi_channel = 3;
-reg note_on_reg[0:5];
-reg [6:0] note_reg[0:5];
-reg [6:0] old_note_reg[0:5];
-reg repeat_note[0:5];
-reg [6:0] velocity_reg[0:5];
-reg [6:0] old_velocity_reg[0:5];
-reg sustain[0:5];
-reg note_sus_on[0:5];
+reg note_on_reg[0:9];
+reg [6:0] note_reg[0:9];
+reg [6:0] old_note_reg[0:9];
+reg repeat_note[0:9];
+reg [6:0] velocity_reg[0:9];
+reg [6:0] old_velocity_reg[0:9];
+reg sustain[0:9];
+reg note_sus_on[0:9];
 reg [1:0] cc1_reg[0:5];
-reg [8:0] pb_reg[0:5];
-reg [8:0] pb_old_reg[0:5];
-reg [3:0] pb_count[0:5];
+reg [8:0] pb_reg[0:9];
+reg [8:0] pb_old_reg[0:9];
+reg [3:0] pb_count[0:9];
 reg [13:0] pb_lookup[0:5];
 localparam int pb_div = 128; //pitch bend values divide a half step by 128
 reg [3:0] mchan_pl_choice;
@@ -453,15 +463,18 @@ reg[13:0] fm_freq_pb[0:5];
 reg[3:0] i;
 reg send_custom_patch[0:5];
 reg c_patch_sent[0:5] = '{1,1,1,1,1,1};
-/*reg[7:0] custom_patch [0:41] = '{
-	'h03, 'h07, 
-	'h0D, 'h03, 'h22, 'h02, 'h1F, 'h0E, 'h00, 'h0F, 'h0D, 'h00,
-	'h00, 'h03, 'h18, 'h00, 'h1F, 'h09, 'h00, 'h07, 'h0D, 'h00, 
-	'h01, 'h03, 'h18, 'h00, 'h1F, 'h0D, 'h00, 'h0F, 'h0D, 'h00, 
-	'h00, 'h03, 'h08, 'h00, 'h1F, 'h09, 'h00, 'h08, 'h0D, 'h00
-};*/
 reg[6:0] c_patch_i[0:5];
 reg[7:0] c_offset[0:5];
+
+reg psg_sent[0:3];
+reg psg_on[0:3];
+reg[9:0] psg_freq[0:3];
+reg[9:0] psg_freq_pb[0:2];
+reg[1:0] psg_i;
+reg [13:0] psg_pb_lookup[0:2];
+reg [7:0] psgvalue;
+reg [1:0] psgseq[0:3];
+reg psg_wr;
 
 //int i;
 always @ (posedge clk) begin
@@ -861,10 +874,9 @@ always @ (posedge clk) begin
 			send_custom_patch[0] <= 0;
 		end
 		///VOICE PER CHANNEL///
-		//if (!auto_poly) begin
+			/// FM ///
 			for (int ii = 0; ii < 6; ii = ii + 1) begin
 				if (note_on_reg[ii]) begin
-					if (!note_switch && !fm_trig[ii]) note_switch <= 1;
 					if (!fm_on[ii]) begin
 						if (init_patch_sent[ii] < 1) begin
 							if (init_patch_sent[0]+init_patch_sent[1]+init_patch_sent[2]+init_patch_sent[3]+init_patch_sent[4]+init_patch_sent[5] == 0) rst_timer <= 1;
@@ -891,7 +903,6 @@ always @ (posedge clk) begin
 							if (fm_freq[ii] != fm_freq_pb[ii]) begin
 								fm_freq[ii] <= fm_freq_pb[ii];
 								fm_sent[ii] <= 0;
-								note_switch <= 0;
 								myseq[ii] <= 'd0;
 								if (pb_old_reg[ii] != pb_reg[ii]) begin
 									fm_trig[ii] <= 0;
@@ -900,7 +911,6 @@ always @ (posedge clk) begin
 								else if (vibrato[ii] && vib_start[ii]) fm_trig[ii] <= 0;
 								else fm_trig[ii] <= 1;
 							end
-							else note_switch <= 1;
 						pb_count[ii] <= 'b1;
 					end
 					else if (vibrato[ii]) begin
@@ -908,19 +918,16 @@ always @ (posedge clk) begin
 						if (fm_freq[ii] != fm_freq_pb[ii]) begin
 							fm_freq[ii] <= fm_freq_pb[ii];
 							fm_sent[ii] <= 0;
-							note_switch <= 0;
 							myseq[ii] <= 'd0;
 							if (vibrato[ii] && vib_start[ii]) fm_trig[ii] <= 0;
 							else fm_trig[ii] <= 1;
 						end
-						else note_switch <= 1;
 					end
 					else if (fm_freq[ii] != Genfrequencies[note_reg[ii]-20]) begin //frequencies[note_reg[i]-36+blip[i]]) begin
 						fm_freq[ii] <= Genfrequencies[note_reg[ii]-20]; // frequencies[note_reg[i]-36+blip[i]];
 						fm_sent[ii] <= 0;
 						myseq[ii] <= 'd0;
 						fm_trig[ii] <= 1;
-						note_switch <= 0;
 					end
 					if (old_velocity_reg[ii] != velocity_reg[ii]) begin
 						old_velocity_reg[ii] <= velocity_reg[ii];
@@ -937,24 +944,6 @@ always @ (posedge clk) begin
 						fm_trig[ii] <= 1;
 						repeat_note[ii] <= 0;
 					end
-					/*if (velocity_reg[sq1_channel] != adjusted_vel[sq1_channel] && fade_en && fade_speed < 4) begin
-						if (adjusted_vel[sq1_channel]) begin
-							velocity_reg[sq1_channel] <= adjusted_vel[sq1_channel];
-							sq1_sent <= 0;
-							if (sq2_sent) myseq <= 'd0;
-							sq1_trig <= 1;
-						end
-						else begin
-							note_on_reg[sq1_channel] <= 0;
-							note_reg[sq1_channel] <= 0;
-							if (sq1_on) begin
-								sq1_on <= 0;
-								fm_sent[i] <= 0;
-								if (sq2_sent) myseq <= 'd0;
-								sq1_trig <= 1;
-							end
-						end
-					end*/
 				end
 				else begin
 					if (fm_on[ii]) begin
@@ -965,24 +954,8 @@ always @ (posedge clk) begin
 					end
 				end
 			end
-			/*if (duty_switch_en) begin
-				if (sq1_duty != duty_switch_reg[sq1_channel]) begin
-					sq1_duty <= duty_switch_reg[sq1_channel];
-					sq1_duty_sent <= 0;
-				end
-			end
-			else if (modtoDuty) begin
-				if (sq1_duty != cc1_reg[sq1_channel]) begin
-					sq1_duty <= cc1_reg[sq1_channel];
-					sq1_duty_sent <= 0;
-				end
-			end
-			else if (sq1_duty != duty_set) begin
-				sq1_duty <= duty_set;
-				sq1_duty_sent <= 0;
-			end*/
 
-			///2nd pulse
+			/// FM1 Echo from FM0
 			if (echo_en) begin
 				note_on_reg[sq2_channel] <= echo_note_on_reg;
 				note_reg[sq2_channel] <= echo_note_reg;
@@ -993,491 +966,89 @@ always @ (posedge clk) begin
 				end
 				if (pb_count[sq2_channel]) pb_reg[sq2_channel] <= echo_pb_reg;
 			end
-			/*if (note_on_reg[sq2_channel]) begin
-				if (!sq2_on) begin
-					if (pb_count[sq2_channel]) begin
-						pb_lookup[sq2_channel] <= ((note_reg[sq2_channel]-36-2)*pb_div)+pb_reg[sq2_channel];
-						sq2_freq <= sq2_freq_pb;
-						pb_count[sq2_channel] <= 'b1;
-						pb_old_reg[sq2_channel] <= pb_reg[sq2_channel];
-					end
-					else sq2_freq <= frequencies[note_reg[sq2_channel]-36];
-					sq2_on <= 1;
-					sq2_sent <= 0;
-					if (sq1_sent) myseq <= 'd0;
-					sq2_trig <= 1;
-				end
-				else if (pb_count[sq2_channel]) begin
-						pb_lookup[sq2_channel] <= ((note_reg[sq2_channel]-36-2+blip[sq2_channel])*pb_div)+pb_reg[sq2_channel]+(vibrato2?(vib[sq2_channel]-12):0);
-						if (sq2_freq != sq2_freq_pb) begin
-							sq2_freq <= sq2_freq_pb;
-							sq2_sent <= 0;
-							if (sq1_sent) myseq <= 'd0;
-							if (pb_old_reg[sq2_channel] != pb_reg[sq2_channel] && sq2_on) begin
-								sq2_trig <= 0;
-								pb_old_reg[sq2_channel] <= pb_reg[sq2_channel];
-							end
-							else if (vib[sq2_channel]-12 != 0) sq2_trig <= 0;
-							else sq2_trig <= 1;
-						end
-					pb_count[sq2_channel] <= 'b1;
-				end
-				else if (vibrato2) begin
-					pb_lookup[sq2_channel] <= ((note_reg[sq2_channel]-36+blip[sq2_channel])*pb_div)+(vib[sq2_channel]-12);
-						if (sq2_freq != sq2_freq_pb) begin
-							sq2_freq <= sq2_freq_pb;
-							sq2_sent <= 0;
-							if (sq1_sent) myseq <= 'd0;
-							if (vib[sq2_channel]-12 != 0) sq2_trig <= 0;
-							else sq2_trig <= 1;
-						end
-				end
-				else if (sq2_freq != frequencies[note_reg[sq2_channel]-36+blip[sq2_channel]]) begin
-					sq2_freq <= frequencies[note_reg[sq2_channel]-36+blip[sq2_channel]];
-					sq2_sent <= 0;
-					if (sq1_sent) myseq <= 'd0;
-				end
-				if (echo_en) begin
-					if (echo_prev_vel_reg != velocity_reg[sq2_channel]) begin
-						if (velocity_reg[sq2_channel]) begin
-							echo_prev_vel_reg <= velocity_reg[sq2_channel];
-							sq2_sent <= 0;
-							if (sq1_sent) myseq <= 'd0;
-							sq2_trig <= 1;
-						end
-						else begin
-							note_on_reg[sq2_channel] <= 0;
-							note_reg[sq2_channel] <= 0;
-							if (sq2_on) begin
-								sq2_on <= 0;
-								sq2_sent <= 0;
-								if (sq1_sent) myseq <= 'd0;
-								sq2_trig <= 1;
-							end
-						end
-					end
-				end
-				else if (velocity_reg[sq2_channel] != adjusted_vel[sq2_channel] && fade_en2 && fade_speed2 < 4) begin
-					if (adjusted_vel[sq2_channel]) begin
-						velocity_reg[sq2_channel] <= adjusted_vel[sq2_channel];
-						sq2_sent <= 0;
-						if (sq1_sent) myseq <= 'd0;
-						sq2_trig <= 1;
-					end
-					else begin
-						note_on_reg[sq2_channel] <= 0;
-						note_reg[sq2_channel] <= 0;
-						if (sq2_on) begin
-							sq2_on <= 0;
-							sq2_sent <= 0;
-							if (sq1_sent) myseq <= 'd0;
-							sq2_trig <= 1;
-						end
-					end
-				end
-			end
-			else begin
-				if (sq2_on) begin
-					sq2_on <= 0;
-					sq2_sent <= 0;
-					if (sq1_sent) myseq <= 'd0;
-					sq2_trig <= 1;
-				end
-			end
-			if (duty_switch_en2) begin
-				if (sq2_duty != duty_switch_reg[sq2_channel]) begin
-					sq2_duty <= duty_switch_reg[sq2_channel];
-					sq2_duty_sent <= 0;
-				end
-			end
-			else if (modtoDuty2) begin
-				if (sq2_duty != cc1_reg[sq2_channel]) begin
-					sq2_duty <= cc1_reg[sq2_channel];
-					sq2_duty_sent <= 0;
-				end
-			end
-			else if (sq2_duty != duty_set2) begin
-				sq2_duty <= duty_set2;
-				sq2_duty_sent <= 0;
-			end
+			
 
-			//Wave
-			if (note_on_reg[wav_channel]) begin
-				if (!wav_on) begin
-					if (pb_count[wav_channel]) begin
-						pb_lookup[wav_channel] <= ((note_reg[wav_channel]-36-2)*pb_div)+pb_reg[wav_channel];
-						wav_freq <= wav_freq_pb;
-						pb_count[wav_channel] <= 'b1;
-						pb_old_reg[wav_channel] <= pb_reg[wav_channel];
+			//// PSG ///
+			for (int ii = 6; ii < 10; ii = ii + 1) begin
+				if (note_on_reg[ii]) begin
+					if (!psg_on[ii-6]) begin
+						if (pb_count[ii] && ii < 9) begin
+							psg_pb_lookup[ii-6] <= ((note_reg[ii]-45-2)<<7)+pb_reg[ii]; 
+							psg_freq[ii-6] <= psg_freq_pb[ii-6];
+							pb_count[ii] <= 'b1;
+							pb_old_reg[ii] <= pb_reg[ii];
+						end
+						else psg_freq[ii-6] <= PSGfrequencies[note_reg[ii]-45];
+						psg_on[ii-6] <= 1;
+						psg_sent[ii-6] <= 0;
+						psgseq[ii-6] <= 'd0;
+						//psg_trig[ii-6] <= 1;
 					end
-					else wav_freq <= frequencies[note_reg[wav_channel]-36];
-					wav_on <= 1;
-					wav_sent <= 0;
-					if (wav_ram_init < 2) begin
-						wav_ram_sent <= 0;
-						wav_ram_init <= wav_ram_init + 'b1;
-					end
-					else if (waveform_reg != waveform) begin
-						wav_ram_sent <= 0;
-						waveform_reg <= waveform;
-					end
-					if (sq1_sent && sq2_sent) myseq <= 'd0;
-					wav_trig <= 1;
-				end
-				else if (pb_count[wav_channel]) begin
-						pb_lookup[wav_channel] <= ((note_reg[wav_channel]-36-2+blip[wav_channel])*pb_div)+pb_reg[wav_channel]+(vibrato3?(vib[wav_channel]-12):0)-(fall2_en?fall2_amount_reg:0);
-						if (wav_freq != wav_freq_pb) begin
-							wav_freq <= wav_freq_pb;
-							wav_sent <= 0;
-							if (sq1_sent && sq2_sent) myseq <= 'd0;
-							if (pb_old_reg[wav_channel] != pb_reg[wav_channel] && wav_on) begin
-								wav_trig <= 0;
-								pb_old_reg[wav_channel] <= pb_reg[wav_channel];
+					else if (ii < 9) begin
+						if (pb_count[ii]) begin
+								psg_pb_lookup[ii-6] <= ((note_reg[ii]-45-2)<<7)+pb_reg[ii]+(vibrato[ii]?(vib[ii]-12):0); 
+								if (psg_freq[ii-6] != psg_freq_pb[ii-6]) begin
+									psg_freq[ii-6] <= psg_freq_pb[ii-6];
+									psg_sent[ii-6] <= 0;
+									psgseq[ii-6] <= 'd0;
+									if (pb_old_reg[ii] != pb_reg[ii]) begin
+										//psg_trig[ii-6] <= 0;
+										pb_old_reg[ii] <= pb_reg[ii];
+									end
+									/*else if (vibrato[ii] && vib_start[ii]) psg_trig[ii-6] <= 0;
+									else psg_trig[ii-6] <= 1;*/
+								end
+							pb_count[ii] <= 'b1;
+						end
+						else if (vibrato[ii]) begin
+							psg_pb_lookup[ii-6] <= ((note_reg[ii]-45)<<7)+(vib[ii]-12); 
+							if (psg_freq[ii-6] != psg_freq_pb[ii-6]) begin
+								psg_freq[ii-6] <= psg_freq_pb[ii-6];
+								psg_sent[ii-6] <= 0;
+								psgseq[ii-6] <= 'd0;
+								/*if (vibrato[ii] && vib_start[ii]) psg_trig[ii-6] <= 0;
+								else psg_trig[ii-6] <= 1;*/
 							end
-							else if (vib[wav_channel]-12 != 0) wav_trig <= 0;
-							else if (fall2_amount_reg != 0) wav_trig <= 0;
-							else wav_trig <= 1;
 						end
-					pb_count[wav_channel] <= 'b1;
-				end
-				else if (vibrato3) begin
-					pb_lookup[wav_channel] <= ((note_reg[wav_channel]-36+blip[wav_channel])*pb_div)+(vib[wav_channel]-12)-(fall2_en?fall2_amount_reg:0);
-						if (wav_freq != wav_freq_pb) begin
-							wav_freq <= wav_freq_pb;
-							wav_sent <= 0;
-							if (sq1_sent && sq2_sent) myseq <= 'd0;
-							if (vib[wav_channel]-12 != 0) wav_trig <= 0;
-							else if (fall2_amount_reg != 0) wav_trig <= 0;
-							else wav_trig <= 1;
+						else if (psg_freq[ii-6] != PSGfrequencies[note_reg[ii]-45]) begin
+							psg_freq[ii-6] <= PSGfrequencies[note_reg[ii]-45]; 
+							psg_sent[ii-6] <= 0;
+							psgseq[ii-6] <= 'd0;
+							//psg_trig[ii] <= 1;
 						end
-				end
-				else if (fall2_en) begin
-					pb_lookup[wav_channel] <= ((note_reg[wav_channel]-36+blip[wav_channel])*pb_div)-fall2_amount_reg;
-						if (wav_freq != wav_freq_pb) begin
-							wav_freq <= wav_freq_pb;
-							wav_sent <= 0;
-							if (sq1_sent && sq2_sent) myseq <= 'd0;
-							if (fall2_amount_reg != 0) wav_trig <= 0;
-							else wav_trig <= 1;
-						end
-				end
-				else if (wav_freq != frequencies[note_reg[wav_channel]-36+blip[wav_channel]]) begin
-					wav_freq <= frequencies[note_reg[wav_channel]-36+blip[wav_channel]];
-					wav_sent <= 0;
-					if (sq1_sent && sq2_sent) myseq <= 'd0;
-				end
-				if (velocity_reg[wav_channel] != adjusted_vel[wav_channel] && fade_en3) begin
-					//if (adjusted_vel[wav_channel]) begin
-						velocity_reg[wav_channel] <= adjusted_vel[wav_channel];
-						wav_sent <= 0;
-						if (sq1_sent && sq2_sent) myseq <= 'd0;
-						wav_trig <= 1;
-					//end
-					/*else begin
-						note_on_reg[wav_channel] <= 0;
-						note_reg[wav_channel] <= 0;
-						if (wav_on) begin
-							wav_on <= 0;
-							wav_sent <= 0;
-							if (sq1_sent && sq2_sent) myseq <= 'd0;
-							wav_trig <= 1;
-						end
+					end
+					/*if (old_velocity_reg[ii] != velocity_reg[ii]) begin
+						old_velocity_reg[ii] <= velocity_reg[ii];
+						vel_sent[ii] <= 0;
+						vel_ready[ii] <= 0;
+						car2[ii] <= 0;
+						car3[ii] <= 0;
+						car4[ii] <= 0;
+						myaddress <= 1;
 					end*/
-				/*end
-			end
-			else begin
-				if (wav_on) begin
-					wav_on <= 0;
-					wav_sent <= 0;
-					if (sq1_sent && sq2_sent) myseq <= 'd0;
-					wav_trig <= 1;
+					if (repeat_note[ii]) begin
+						psg_sent[ii-6] <= 0;
+						psgseq[ii-6] <= 'd0;
+						//psg_trig[ii-6] <= 1;
+						repeat_note[ii] <= 0;
+					end
+				end
+				else begin
+					if (psg_on[ii-6]) begin
+						psg_on[ii-6] <= 0;
+						psg_sent[ii-6] <= 0;
+						psgseq[ii-6] <= 'd0;
+						//psg_trig[ii-6] <= 1;
+					end
 				end
 			end
 
-			///Noise
-			if (note_on_reg[noi_channel]) begin
-				if (!noi_on) begin
-					noi_freq <= (63-(note_reg[noi_channel]-36));
-					noi_on <= 1;
-					noi_sent <= 0;
-					if (sq1_sent && sq2_sent && wav_sent) myseq <= 'd0;
-					noi_trig <= 1;
-				end
-				else if (noi_freq != (63-(note_reg[noi_channel]-36-(fall_en?fall_amount_reg:0)))) begin
-					noi_freq <= (63-(note_reg[noi_channel]-36-(fall_en?fall_amount_reg:0)));
-					noi_sent <= 0;
-					if (sq1_sent && sq2_sent && wav_sent) myseq <= 'd0;
-					if (old_note_reg[noi_channel] != note_reg[noi_channel]) begin
-						noi_trig <= 1;
-						old_note_reg[noi_channel] <= note_reg[noi_channel];
-					end
-					else noi_trig <= 0;
-				end
-				if (velocity_reg[noi_channel] != adjusted_vel[noi_channel] && fade_en4 && fade_speed4 < 4) begin
-					if (adjusted_vel[noi_channel]) begin
-						velocity_reg[noi_channel] <= adjusted_vel[noi_channel];
-						noi_sent <= 0;
-						if (sq1_sent && sq2_sent && wav_sent) myseq <= 'd0;
-						noi_trig <= 1;
-					end
-					else begin
-						note_on_reg[noi_channel] <= 0;
-						note_reg[noi_channel] <= 0;
-						if (noi_on) begin
-							noi_on <= 0;
-							noi_sent <= 0;
-							if (sq1_sent && sq2_sent && wav_sent) myseq <= 'd0;
-							noi_trig <= 1;
-						end
-					end
-				end
-			end
-			else begin
-				if (noi_on) begin
-					noi_on <= 0;
-					noi_sent <= 0;
-					if (sq1_sent && sq2_sent && wav_sent) myseq <= 'd0;
-					noi_trig <= 1;
-				end
-			end*/
-		//end
-		/*else if (!echo_en) begin ////AUTO-POLY////
-			if (Pinit) begin
-				for (int ii = 0; ii < max; ii = ii + 1) begin
-					if (poly_note_on_reg[sq1_channel][ii+ii]) begin
-						if (!sq1_onP[ii]) begin
-							if (pb_count[sq1_channel] && ((pb_reg[sq1_channel] > 'd256) || (pb_reg[sq1_channel] < 'd256))) begin
-								poly_pb_lookup[sq1_channel][ii+ii] <= ((poly_note_reg[sq1_channel][ii+ii]-36-2)*pb_div)+pb_reg[sq1_channel]; //map function used to make LUT: (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
-								sq1_freqP[ii] <= sq1_freq_pbP[ii];
-								pb_old_reg[sq1_channel] <= pb_reg[sq1_channel];
-								pb_count[sq1_channel] <= 'b1;
-							end
-							else sq1_freqP[ii] <= frequencies[poly_note_reg[sq1_channel][ii+ii]-36];
-							sq1_onP[ii] <= 1;
-							sq1_sentP[ii] <= 0;
-							if (sq2_sentP[ii]) myseqP[ii] <= 'd0;
-							sq1_trigP[ii] <= 1;
-						end
-						else if (pb_count[sq1_channel]) begin
-							poly_pb_lookup[sq1_channel][ii+ii] <= ((poly_note_reg[sq1_channel][ii+ii]-36-2+poly_blip[sq1_channel][ii+ii])*pb_div)+pb_reg[sq1_channel]+(vibrato?(poly_vib[sq1_channel][ii+ii]-12):0);
-							if (sq1_freqP[ii] != sq1_freq_pbP[ii]) begin
-								sq1_freqP[ii] <= sq1_freq_pbP[ii];
-								sq1_sentP[ii] <= 0;
-								if (sq2_sentP[ii]) myseqP[ii] <= 'd0;
-								if (pb_old_reg[sq1_channel] != pb_reg[sq1_channel] && sq1_onP[ii]) begin
-									sq1_trigP[ii] <= 0;
-									pb_old_reg[sq1_channel] <= pb_reg[sq1_channel];
-								end
-								else if (poly_vib[sq1_channel][ii+ii]-12 != 0) sq1_trigP[ii] <= 0;
-								else sq1_trigP[ii] <= 1;
-							end
-							pb_count[sq1_channel] <= 'b1;
-						end
-						else if (vibrato) begin
-							poly_pb_lookup[sq1_channel][ii+ii] <= ((poly_note_reg[sq1_channel][ii+ii]-36+poly_blip[sq1_channel][ii+ii])*pb_div)+(poly_vib[sq1_channel][ii+ii]-12);
-							if (sq1_freqP[ii] != sq1_freq_pbP[ii]) begin
-								sq1_freqP[ii] <= sq1_freq_pbP[ii];
-								sq1_sentP[ii] <= 0;
-								if (sq2_sentP[ii]) myseqP[ii] <= 'd0;
-								if (poly_vib[sq1_channel][ii+ii]-12 != 0) sq1_trigP[ii] <= 0;
-								else sq1_trigP[ii] <= 1;
-							end
-						end
-						else if (sq1_freqP[ii] != frequencies[poly_note_reg[sq1_channel][ii+ii]-36+poly_blip[sq1_channel][ii+ii]]) begin
-							sq1_freqP[ii] <= frequencies[poly_note_reg[sq1_channel][ii+ii]-36+poly_blip[sq1_channel][ii+ii]];
-							sq1_sentP[ii] <= 0;
-							if (sq2_sentP[ii]) myseqP[ii] <= 'd0;
-							sq1_trigP[ii] <= 1;
-						end
-						if (poly_repeat_note[sq1_channel][ii+ii]) begin
-							sq1_sentP[ii] <= 0;
-							if (sq2_sentP[ii]) myseqP[ii] <= 'd0;
-							sq1_trigP[ii] <= 1;
-							poly_repeat_note[sq1_channel][ii+ii] <= 0;
-						end
-						if (poly_velocity_reg[sq1_channel][ii+ii] != poly_adjusted_vel[sq1_channel][ii+ii] && fade_en && fade_speed < 4) begin
-							if (poly_adjusted_vel[sq1_channel][ii+ii]) begin
-								poly_velocity_reg[sq1_channel][ii+ii] <= poly_adjusted_vel[sq1_channel][ii+ii];
-								sq1_sentP[ii] <= 0;
-								if (sq2_sentP[ii]) myseqP[ii] <= 'd0;
-								sq1_trigP[ii] <= 1;
-							end
-							else begin
-								poly_note_on_reg[sq1_channel][ii+ii] <= 0;
-								if (sq1_onP[ii]) begin
-									sq1_sentP[ii] <= 0;
-									if (sq2_sentP[ii]) myseqP[ii] <= 'd0;
-									sq1_trigP[ii] <= 1;
-									sq1_onP[ii] <= 0;
-								end
-							end
-						end
-					end
-					else begin
-						if (sq1_onP[ii]) begin
-							sq1_onP[ii] <= 0;
-							sq1_sentP[ii] <= 0;
-							if (sq2_sentP[ii]) myseqP[ii] <= 'd0;
-							sq1_trigP[ii] <= 1;
-						end
-					end
-					if (duty_switch_en) begin
-						if (sq1_dutyP[ii] != poly_duty_switch_reg[sq1_channel][ii+ii]) begin
-							sq1_dutyP[ii] <= poly_duty_switch_reg[sq1_channel][ii+ii];
-							sq1_duty_sentP[ii] <= 0;
-						end
-					end
-					else if (modtoDuty && sq1_dutyP[ii] != cc1_reg[sq1_channel]) begin
-						sq1_dutyP[ii] <= cc1_reg[sq1_channel];
-						sq2_dutyP[ii] <= cc1_reg[sq1_channel];
-						sq1_duty_sentP[ii] <= 0;
-						sq2_duty_sentP[ii] <= 0;
-					end
-					else if (sq1_dutyP[ii] != duty_set) begin
-						sq1_dutyP[ii] <= duty_set;
-						sq1_duty_sentP[ii] <= 0;
-						sq2_dutyP[ii] <= duty_set;
-						sq2_duty_sentP[ii] <= 0;
-					end
-					if (poly_note_on_reg[sq1_channel][ii+ii+1]) begin
-						if (!sq2_onP[ii]) begin
-							if (pb_count[sq1_channel] && ((pb_reg[sq1_channel] > 'd256) || (pb_reg[sq1_channel] < 'd256))) begin
-								poly_pb_lookup[sq1_channel][ii+ii+1] <= ((poly_note_reg[sq1_channel][ii+ii+1]-36-2)*pb_div)+pb_reg[sq1_channel];
-								sq2_freqP[ii] <= sq2_freq_pbP[ii];
-								pb_old_reg[sq1_channel] <= pb_reg[sq1_channel];
-								pb_count[sq1_channel] <= 'b1;
-							end
-							else sq2_freqP[ii] <= frequencies[poly_note_reg[sq1_channel][ii+ii+1]-36];
-							sq2_onP[ii] <= 1;
-							sq2_sentP[ii] <= 0;
-							if (sq1_sentP[ii]) myseqP[ii] <= 'd0;
-							sq2_trigP[ii] <= 1;
-						end
-						else if (pb_count[sq1_channel]) begin
-							poly_pb_lookup[sq1_channel][ii+ii+1] <= ((poly_note_reg[sq1_channel][ii+ii+1]-36-2+poly_blip[sq1_channel][ii+ii+1])*pb_div)+pb_reg[sq1_channel]+(vibrato?(poly_vib[sq1_channel][ii+ii+1]-12):0);
-							if (sq2_freqP[ii] != sq2_freq_pbP[ii]) begin
-								sq2_freqP[ii] <= sq2_freq_pbP[ii];
-								sq2_sentP[ii] <= 0;
-								if (sq1_sentP[ii]) myseqP[ii] <= 'd0;
-								if (pb_old_reg[sq1_channel] != pb_reg[sq1_channel] && sq2_onP[ii]) begin
-									sq2_trigP[ii] <= 0;
-									pb_old_reg[sq1_channel] <= pb_reg[sq1_channel];
-								end
-								else if (poly_vib[sq1_channel][ii+ii+1]-12 != 0) sq2_trigP[ii] <= 0;
-								else sq2_trigP[ii] <= 1;
-							end
-							pb_count[sq1_channel] <= 'b1;
-						end
-						else if (vibrato) begin
-							poly_pb_lookup[sq1_channel][ii+ii+1] <= ((poly_note_reg[sq1_channel][ii+ii+1]-36+poly_blip[sq1_channel][ii+ii+1])*pb_div)+(poly_vib[sq1_channel][ii+ii+1]-12);
-							if (sq2_freqP[ii] != sq2_freq_pbP[ii]) begin
-								sq2_freqP[ii] <= sq2_freq_pbP[ii];
-								sq2_sentP[ii] <= 0;
-								if (sq1_sentP[ii]) myseqP[ii] <= 'd0;
-								if (poly_vib[sq1_channel][ii+ii+1]-12 != 0) sq2_trigP[ii] <= 0;
-								else sq2_trigP[ii] <= 1;
-							end
-						end
-						else if (sq2_freqP[ii] != frequencies[poly_note_reg[sq1_channel][ii+ii+1]-36+poly_blip[sq1_channel][ii+ii+1]]) begin
-							sq2_freqP[ii] <= frequencies[poly_note_reg[sq1_channel][ii+ii+1]-36+poly_blip[sq1_channel][ii+ii+1]];
-							sq2_sentP[ii] <= 0;
-							if (sq1_sentP[ii]) myseqP[ii] <= 'd0;
-							sq2_trigP[ii] <= 1;
-						end
-						if (poly_repeat_note[sq1_channel][ii+ii+1]) begin
-							sq2_sentP[ii] <= 0;
-							if (sq1_sentP[ii]) myseqP[ii] <= 'd0;
-							sq2_trigP[ii] <= 1;
-							poly_repeat_note[sq1_channel][ii+ii+1] <= 0;
-						end
-						if (poly_velocity_reg[sq1_channel][ii+ii+1] != poly_adjusted_vel[sq1_channel][ii+ii+1] && fade_en && fade_speed < 4) begin
-							if (poly_adjusted_vel[sq1_channel][ii+ii+1]) begin
-								poly_velocity_reg[sq1_channel][ii+ii+1] <= poly_adjusted_vel[sq1_channel][ii+ii+1];
-								sq2_sentP[ii] <= 0;
-								if (sq1_sentP[ii]) myseqP[ii] <= 'd0;
-								sq2_trigP[ii] <= 1;
-							end
-							else begin
-								poly_note_on_reg[sq1_channel][ii+ii+1] <= 0;
-								if (sq2_onP[ii]) begin
-									sq2_sentP[ii] <= 0;
-									if (sq1_sentP[ii]) myseqP[ii] <= 'd0;
-									sq2_trigP[ii] <= 1;
-									sq2_onP[ii] <= 0;
-								end
-							end
-						end
-					end
-					else begin
-						if (sq2_onP[ii]) begin
-							sq2_sentP[ii] <= 0;
-							if (sq1_sentP[ii]) myseqP[ii] <= 'd0;
-							sq2_trigP[ii] <= 1;
-							sq2_onP[ii] <= 0;
-						end
-					end
-					if (duty_switch_en) begin
-						if (sq2_dutyP[ii] != poly_duty_switch_reg[sq1_channel][ii+ii+1]) begin
-							sq2_dutyP[ii] <= poly_duty_switch_reg[sq1_channel][ii+ii+1];
-							sq2_duty_sentP[ii] <= 0;
-						end
-					end
-				end
-			end
-		end*/
-		///////////SEQUENCING/////////
-		//if (!auto_poly) begin ///VOICE PER CHANNEL
-			/*if (!wav_ram_sent) begin
-				if (!audio_wr) begin
-					if (!wav_ram_start) begin
-						myaddress <= 7'h1A; //NR30 FF1A E--- ---- DAC power
-						myvalue <= 0;
-						audio_wr <= 1;
-						wav_ram_start <= 1;
-						wav_ram_count <= 0;
-						wav_ram_end <= 0;
-					end
-					else if (wav_ram_count < 'd16) begin //FF30 to FF3F
-						myaddress <= wav_ram_count+48; //NR21 FF16 DDLL LLLL Duty, Length load (64-L)
-						case(waveform_reg)
-							'd0: begin
-								myvalue <= (wave_bass[wav_ram_count+wav_ram_count]<<4) + wave_bass[wav_ram_count+wav_ram_count+1];
-							end
-							'd1: begin
-								myvalue <= (wave_lead[wav_ram_count+wav_ram_count]<<4) + wave_lead[wav_ram_count+wav_ram_count+1];
-							end
-							'd2: begin
-								myvalue <= (wave_triangle[wav_ram_count+wav_ram_count]<<4) + wave_triangle[wav_ram_count+wav_ram_count+1];
-							end
-							'd3: begin
-								myvalue <= (wave_saw[wav_ram_count+wav_ram_count]<<4) + wave_saw[wav_ram_count+wav_ram_count+1];
-							end
-							'd4: begin
-								myvalue <= (wave_square[wav_ram_count+wav_ram_count]<<4) + wave_square[wav_ram_count+wav_ram_count+1];
-							end
-						endcase
-						audio_wr <= 1;
-						wav_ram_count <= wav_ram_count + 'b1;
-					end
-					else begin
-						if (!wav_ram_end) begin
-							myaddress <= 7'h1A; //NR30 FF1A E--- ---- DAC power
-							myvalue <= 8'b10000000;
-							audio_wr <= 1;
-							wav_ram_end <= 1;
-						end
-						else begin
-							wav_ram_sent <= 1;
-							wav_ram_start <= 0;
-						end
-					end
-				end
-				else audio_wr <= 0;
-			end*/
+			///// Sending data to Chips ////
 			if (rst_timer) begin
 				rst_timer <= rst_timer + 1;
 			end
 			else begin //for (int i = 0; i < 12; i = i + 1) begin
+				//// FM /////
 				if (patch_sent[i] && vel_sent[i] && fm_sent[i]) i <= i + 1;
 				if (i > 5) i <= 0;
 				if (!patch_sent[i]) begin
@@ -1762,119 +1333,37 @@ always @ (posedge clk) begin
 					end
 					else if (myaddress == 0 || myaddress == 2 || !genready[7]) audio_wr <= 0;
 				end
-				/*if (sq1_sent && sq2_sent && noi_sent && wav_sent) begin
-						if (!sq1_duty_sent) begin
-							myaddress <= 7'h11; //NR11 FF11 DDLL LLLL Duty, Length load (64-L)
-							myvalue <= sq1_duty << 6;
-							sq1_duty_sent <= 1;
-							audio_wr <= 1;
-							//myseq <= 3'b011;
-						end
-						else if (!sq2_duty_sent) begin
-							myaddress <= 7'h16; //NR21 FF16 DDLL LLLL Duty, Length load (64-L)
-							myvalue <= sq2_duty << 6;
-							sq2_duty_sent <= 1;
-							audio_wr <= 1;
-						end
+
+				//// PSG ////
+				if (psg_sent[psg_i]) psg_i <= psg_i + 1;
+				else begin
+					if (!psg_wr) begin
+						case(psgseq[psg_i])
+							'd0 : begin
+								psgvalue <= 'h90 | (psg_i << 5) | (psg_on[psg_i]? ((127-velocity_reg[psg_i+6])>>3) : 15); //psg volume $90 OR (channel << 5) OR attenuation  
+								if (!psg_on[psg_i]) psg_sent[psg_i] <= 1;
+								else psgseq[psg_i] <= 'd1;
+							end
+							'd1 : begin
+								if (psg_i < 3) begin
+									psgvalue <= 'h80 | (psg_i << 5) | (psg_freq[psg_i] & 'hF); //psg freq $80 OR (channel << 5) OR (frequency AND 0x0F)
+									psgseq[psg_i] <= 'd2; 
+								end
+								else begin
+									psgvalue <= 'hE4;
+									psg_sent[psg_i] <= 1;
+								end
+							end
+							'd2 : begin
+								psgvalue <= psg_freq[psg_i] >> 4;
+								psg_sent[psg_i] <= 1;
+							end
+						endcase
+						psg_wr <= 1;
 					end
-					elseaudio_wr <= 0;
-				end*/
-			end
-		//end
-		/*else begin ////AUTO-POLY////
-			if (Pinit) begin
-				for (int ii = 0; ii < max; ii = ii + 1) begin
-					case(myseqP[ii])
-						'd0: begin
-							if (!audio_wrP[ii]) begin
-								if (!sq1_sentP[ii]) begin
-									myaddressP[ii] <= 7'h12; //NR12 FF12 VVVV APPP Starting volume, Envelope enable, Env speed
-									if (sq1_onP[ii]) begin
-										myvalueP[ii] <= (poly_velocity_reg[sq1_channel][ii+ii]<<4)+(fade_en?(fade_speed>3?'d7-(fade_speed-3):0):0);
-									end
-									else if (poly_kill) myvalueP[ii] <= 0;
-									else myvalueP[ii] <= 8'b00001000;
-									myseqP[ii] <= 'd1;
-									audio_wrP[ii] <= 1;
-								end
-								else if (!sq2_sentP[ii]) begin
-									myaddressP[ii] <= 7'h17; //NR22 FF17 VVVV APPP Starting volume, Envelope enable, Env speed
-									if (sq2_onP[ii]) begin
-										myvalueP[ii] <= (poly_velocity_reg[sq1_channel][ii+ii+1]<<4)+(fade_en?(fade_speed>3?'d7-(fade_speed-3):0):0);
-									end
-									else if (poly_kill) myvalueP[ii] <= 0;
-									else myvalueP[ii] <= 8'b00001000;
-									myseqP[ii] <= 'd1;
-									audio_wrP[ii] <= 1;
-								end
-							end
-							else audio_wrP[ii] <= 0;
-						end
-						'd1 : begin
-							if (!audio_wrP[ii]) begin
-								if (!sq1_sentP[ii]) begin
-									myaddressP[ii] <= 7'h13; //NR13 FF13 FFFF FFFF Frequency LSB
-									myvalueP[ii] <= sq1_freqP[ii][7:0];
-									myseqP[ii] <= 'd2;
-									audio_wrP[ii] <= 1;
-								end
-								else if (!sq2_sentP[ii]) begin
-									myaddressP[ii] <= 7'h18; //NR23 FF18 FFFF FFFF Frequency LSB
-									myvalueP[ii] <= sq2_freqP[ii][7:0];
-									myseqP[ii] <= 'd2;
-									audio_wrP[ii] <= 1;
-								end
-							end
-							else audio_wrP[ii] <= 0;
-						end
-						'd2 : begin
-							if (!audio_wrP[ii]) begin
-								if (!sq1_sentP[ii]) begin
-									myaddressP[ii] <= 7'h14; //NR14 FF14 TL-- -FFF Trigger, Length enable, Frequency MSB
-									if (!sq1_trigP[ii]) begin
-										myvalueP[ii] <= sq1_freqP[ii][10:8];
-										sq1_trigP[ii] <= 1;
-									end
-									else myvalueP[ii] <= (8'b10000000 + sq1_freqP[ii][10:8]);
-									sq1_sentP[ii] <= 1;
-									if (!sq2_sentP[ii]) myseqP[ii] <= 'd0;
-									audio_wrP[ii] <= 1;
-								end
-								else if (!sq2_sentP[ii]) begin
-									myaddressP[ii] <= 7'h19; //NR24 FF19 TL-- -FFF Trigger, Length enable, Frequency MSB
-									if (!sq2_trigP[ii]) begin
-										myvalueP[ii] <= sq2_freqP[ii][10:8];
-										sq2_trigP[ii] <= 1;
-									end
-									else myvalueP[ii] <= (8'b10000000 + sq2_freqP[ii][10:8]);
-									sq2_sentP[ii] <= 1;
-									if (!sq1_sentP[ii]) myseqP[ii] <= 'd0;
-									audio_wrP[ii] <= 1;
-								end
-							end
-							else audio_wrP[ii] <= 0;
-						end
-					endcase
-					if (sq1_sentP[ii] && sq2_sentP[ii]) begin
-						if (!audio_wrP[ii]) begin
-							if (!sq1_duty_sentP[ii]) begin
-								myaddressP[ii] <= 7'h11; //NR11 FF11 DDLL LLLL Duty, Length load (64-L)
-								myvalueP[ii] <= sq1_dutyP[ii] << 6;
-								sq1_duty_sentP[ii] <= 1;
-								audio_wrP[ii] <= 1;
-							end
-							else if (!sq2_duty_sentP[ii]) begin
-								myaddressP[ii] <= 7'h16; //NR21 FF16 DDLL LLLL Duty, Length load (64-L)
-								myvalueP[ii] <= sq2_dutyP[ii] << 6;
-								sq2_duty_sentP[ii] <= 1;
-								audio_wrP[ii] <= 1;
-							end
-						end
-						else audio_wrP[ii] <= 0;
-					end
+					else psg_wr <= 0;
 				end
 			end
-		end*/
 	end
 end
 
@@ -1962,8 +1451,24 @@ midipb_to_Genfreq_LUT midipb_to_Genfreq_LUT5 (
 	.q (fm_freq_pb[5])
 );
 
+midipb_to_PSGfreq_LUT midipb_to_PSGfreq_LUT0 (
+	.address (psg_pb_lookup[0]),
+	.clock (clk),
+	.q (psg_freq_pb[0])
+);
+midipb_to_PSGfreq_LUT midipb_to_PSGfreq_LUT1 (
+	.address (psg_pb_lookup[1]),
+	.clock (clk),
+	.q (psg_freq_pb[1])
+);
+midipb_to_PSGfreq_LUT midipb_to_PSGfreq_LUT2 (
+	.address (psg_pb_lookup[2]),
+	.clock (clk),
+	.q (psg_freq_pb[2])
+);
+
 reg [8:0] vib[0:15];
-reg vib_start[0:5];
+reg vib_start[0:8];
 vibrato_gen vibrato_gen0 (
 	.en (vibrato[0]),
 	.clk (clk),
@@ -2011,6 +1516,31 @@ vibrato_gen vibrato_gen5 (
 	.note_start (note_reg[5]),
 	.vib_out (vib[5]),
 	.vib_start (vib_start[5])
+);
+
+vibrato_gen vibrato_genPSG0 (
+	.en (vibrato[6]),
+	.clk (clk),
+	.note_on (note_on_reg[6]),
+	.note_start (note_reg[6]),
+	.vib_out (vib[6]),
+	.vib_start (vib_start[6])
+);
+vibrato_gen vibrato_genPSG1 (
+	.en (vibrato[7]),
+	.clk (clk),
+	.note_on (note_on_reg[7]),
+	.note_start (note_reg[7]),
+	.vib_out (vib[7]),
+	.vib_start (vib_start[7])
+);
+vibrato_gen vibrato_genPSG2 (
+	.en (vibrato[8]),
+	.clk (clk),
+	.note_on (note_on_reg[8]),
+	.note_start (note_reg[8]),
+	.vib_out (vib[8]),
+	.vib_start (vib_start[8])
 );
 
 reg [1:0] duty_switch_reg[0:15];
@@ -2128,6 +1658,20 @@ jt12 jt12 (
     .snd_left 		(audio_l1),
 	.snd_right  	(audio_r1)
 );
+
+wire signed [10:0] psg_sound;
+jt89 psg
+(
+	.rst(rst_timer? 1 : 0),
+	.clk(clk),
+	.clk_en(psgcen),
+
+	.wr_n(~psg_wr),
+	.din(psgvalue),
+
+	.sound(psg_sound)
+);
+assign PSG_SND = psg_sound;
 
 reg [3:0] poly_adjusted_vel[0:15][0:max+max-1];
 reg [8:0] poly_vib[0:15][0:max+max-1];
@@ -2261,7 +1805,7 @@ wire [255:0] poly_note_out_combined[0:max];
 	end
 endgenerate*/
 
-assign audio_l = audio_l1; // + audio_combined_l[max];
-assign audio_r = audio_r1; // + audio_combined_r[max];
+assign FM_audio_l = audio_l1; // + audio_combined_l[max];
+assign FM_audio_r = audio_r1; // + audio_combined_r[max];
 
 endmodule

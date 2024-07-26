@@ -18,11 +18,14 @@ set_global_assignment -name VERILOG_FILE rtl/pitchfallW.v
 
 set_global_assignment -name MIF_FILE rtl/midipb_to_Genfreq_LUT.mif
 set_global_assignment -name QIP_FILE rtl/midipb_to_Genfreq_LUT.qip
+set_global_assignment -name MIF_FILE rtl/midipb_to_PSGfreq_LUT.mif
+set_global_assignment -name QIP_FILE rtl/midipb_to_PSGfreq_LUT.qip
 
 set_global_assignment -name VHDL_FILE rtl/gbc_snd.vhd
 set_global_assignment -name VHDL_FILE rtl/speedcontrol.vhd
 
 set_global_assignment -name QIP_FILE rtl/jt12/jt12.qip
+set_global_assignment -name QIP_FILE rtl/jt89/jt89.qip
 
 set_global_assignment -name QIP_FILE rtl/tv80/TV80.qip
 set_global_assignment -name VERILOG_FILE rtl/Aznable/charmap.v
