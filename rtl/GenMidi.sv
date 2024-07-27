@@ -270,37 +270,37 @@ reg[7:0] GenPatch[378] = '{
 		'h06, 'h00, 'h14, 'h00, 'h1F, 'h05, 'h06, 'h04, 'h0D, 'h00, 
 		'h02, 'h01, 'h08, 'h00, 'h1F, 'h06, 'h05, 'h07, 'h0C, 'h00, 
 		'h02, 'h05, 'h08, 'h00, 'h1F, 'h06, 'h06, 'h07, 'h0C, 'h00,
-	//Brass
+	//Custom0
 		'h05, 'h07, 
 		'h01, 'h03, 'h13, 'h01, 'h10, 'h0F, 'h04, 'h07, 'h01, 'h00,
 		'h03, 'h03, 'h12, 'h01, 'h18, 'h02, 'h00, 'h09, 'h01, 'h00, 
 		'h01, 'h03, 'h0A, 'h01, 'h12, 'h02, 'h00, 'h09, 'h00, 'h00, 
 		'h01, 'h03, 'h0A, 'h01, 'h19, 'h02, 'h00, 'h09, 'h01, 'h00,
-	//Brass
+	//Custom1
 		'h05, 'h07, 
 		'h01, 'h03, 'h13, 'h01, 'h10, 'h0F, 'h04, 'h07, 'h01, 'h00,
 		'h03, 'h03, 'h12, 'h01, 'h18, 'h02, 'h00, 'h09, 'h01, 'h00, 
 		'h01, 'h03, 'h0A, 'h01, 'h12, 'h02, 'h00, 'h09, 'h00, 'h00, 
 		'h01, 'h03, 'h0A, 'h01, 'h19, 'h02, 'h00, 'h09, 'h01, 'h00,
-	//Brass
+	//Custom2
 		'h05, 'h07, 
 		'h01, 'h03, 'h13, 'h01, 'h10, 'h0F, 'h04, 'h07, 'h01, 'h00,
 		'h03, 'h03, 'h12, 'h01, 'h18, 'h02, 'h00, 'h09, 'h01, 'h00, 
 		'h01, 'h03, 'h0A, 'h01, 'h12, 'h02, 'h00, 'h09, 'h00, 'h00, 
 		'h01, 'h03, 'h0A, 'h01, 'h19, 'h02, 'h00, 'h09, 'h01, 'h00,
-	//Brass
+	//Custom3
 		'h05, 'h07, 
 		'h01, 'h03, 'h13, 'h01, 'h10, 'h0F, 'h04, 'h07, 'h01, 'h00,
 		'h03, 'h03, 'h12, 'h01, 'h18, 'h02, 'h00, 'h09, 'h01, 'h00, 
 		'h01, 'h03, 'h0A, 'h01, 'h12, 'h02, 'h00, 'h09, 'h00, 'h00, 
 		'h01, 'h03, 'h0A, 'h01, 'h19, 'h02, 'h00, 'h09, 'h01, 'h00,
-	//Brass
+	//Custom4
 		'h05, 'h07, 
 		'h01, 'h03, 'h13, 'h01, 'h10, 'h0F, 'h04, 'h07, 'h01, 'h00,
 		'h03, 'h03, 'h12, 'h01, 'h18, 'h02, 'h00, 'h09, 'h01, 'h00, 
 		'h01, 'h03, 'h0A, 'h01, 'h12, 'h02, 'h00, 'h09, 'h00, 'h00, 
 		'h01, 'h03, 'h0A, 'h01, 'h19, 'h02, 'h00, 'h09, 'h01, 'h00,
-	//Brass
+	//Custom5
 		'h05, 'h07, 
 		'h01, 'h03, 'h13, 'h01, 'h10, 'h0F, 'h04, 'h07, 'h01, 'h00,
 		'h03, 'h03, 'h12, 'h01, 'h18, 'h02, 'h00, 'h09, 'h01, 'h00, 
@@ -484,7 +484,7 @@ localparam vib_depth = 15;
 //int i;
 always @ (posedge clk) begin
 	if (ioctl_wr & fm0_patch_download) begin
-		GenPatch[126 + c_patch_i[0]] = ioctl_dout;
+		GenPatch[126 + c_patch_i[0]] <= ioctl_dout;
 		c_patch_i[0] <= c_patch_i[0] + 1;
 		c_patch_sent[0] <= 0;
 	end
@@ -496,7 +496,7 @@ always @ (posedge clk) begin
 		end
 	end
 	if (ioctl_wr & fm1_patch_download) begin
-		GenPatch[126 + c_patch_i[1] + 42] = ioctl_dout;
+		GenPatch[126 + c_patch_i[1] + 42] <= ioctl_dout;
 		c_patch_i[1] <= c_patch_i[1] + 1;
 		c_patch_sent[1] <= 0;
 	end
@@ -508,7 +508,7 @@ always @ (posedge clk) begin
 		end
 	end
 	if (ioctl_wr & fm2_patch_download) begin
-		GenPatch[126 + c_patch_i[2] + 84] = ioctl_dout;
+		GenPatch[126 + c_patch_i[2] + 84] <= ioctl_dout;
 		c_patch_i[2] <= c_patch_i[2] + 1;
 		c_patch_sent[2] <= 0;
 	end
@@ -520,7 +520,7 @@ always @ (posedge clk) begin
 		end
 	end
 	if (ioctl_wr & fm3_patch_download) begin
-		GenPatch[126 + c_patch_i[3] + 126] = ioctl_dout;
+		GenPatch[126 + c_patch_i[3] + 126] <= ioctl_dout;
 		c_patch_i[3] <= c_patch_i[3] + 1;
 		c_patch_sent[3] <= 0;
 	end
@@ -532,7 +532,7 @@ always @ (posedge clk) begin
 		end
 	end
 	if (ioctl_wr & fm4_patch_download) begin
-		GenPatch[126 + c_patch_i[4] + 168] = ioctl_dout;
+		GenPatch[126 + c_patch_i[4] + 168] <= ioctl_dout;
 		c_patch_i[4] <= c_patch_i[4] + 1;
 		c_patch_sent[4] <= 0;
 	end
@@ -544,7 +544,7 @@ always @ (posedge clk) begin
 		end
 	end
 	if (ioctl_wr & fm5_patch_download) begin
-		GenPatch[126 + c_patch_i[5] + 210] = ioctl_dout;
+		GenPatch[126 + c_patch_i[5] + 210] <= ioctl_dout;
 		c_patch_i[5] <= c_patch_i[5] + 1;
 		c_patch_sent[5] <= 0;
 	end
