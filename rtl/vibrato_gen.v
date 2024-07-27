@@ -19,25 +19,26 @@
 	with this program. If not, see <http://www.gnu.org/licenses/>.
 ===========================================================================*/
 
-module vibrato_gen
+module vibrato_gen #(parameter depth = 15)
 (
     input        en,
     input        clk,
     input        note_on,
     input        note_repeat,
     input  [6:0] note_start,
+    input  [1:0] wheel,
     output [8:0] vib_out,
     output vib_start
 );
 
 reg note_repeat_reg;
 reg [6:0] note_reg;
-reg [8:0] vib_out_reg = 'd12;
+reg [8:0] vib_out_reg = depth;
 reg [23:0] delay_timer = 'b1; //24
 reg started;
 reg vib_start_reg;
-reg [17:0] step_timer; //18
-reg [4:0] max = 'd24;
+reg [16:0] step_timer; //18
+localparam max = depth+depth;
 reg flip;
 
 assign vib_out = vib_out_reg;
@@ -53,12 +54,12 @@ always @ (posedge clk) begin
             delay_timer <= 'b1;
             step_timer <= 0;
             flip <= 0;
-            vib_out_reg <= 'd12;
+            vib_out_reg <= depth;
         end
         if (started) begin
             if (!vib_start_reg) delay_timer <= delay_timer + 'b1;
             else delay_timer <= 0;
-            if (!delay_timer) begin
+            if (!delay_timer || wheel) begin
                 vib_start_reg <= 1;
                 step_timer <= step_timer + 'b1;
                 if (!step_timer) begin

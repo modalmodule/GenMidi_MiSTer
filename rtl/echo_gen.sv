@@ -28,10 +28,12 @@ module echo_gen
     input  [6:0] note_start,
     input  [6:0] vel_start,
     input  [8:0] pb_start,
+    input  [1:0] cc1_start,
     output       echo_on,
     output [6:0] echo_note,
     output [6:0] echo_vel,
-    output [8:0] echo_pb
+    output [8:0] echo_pb,
+    output [1:0] echo_cc1
 );
 localparam int speed = 23;
 reg note_repeat_reg;
@@ -45,10 +47,13 @@ reg[6:0] echo_vel_reg[0:15];
 reg[6:0] echo_vel_temp;
 reg[8:0] echo_pb_reg[0:15];
 reg[8:0] echo_pb_temp;
+reg[1:0] echo_cc1_reg[0:15];
+reg[1:0] echo_cc1_temp;
 reg[6:0] note_send_reg;
 reg echo_on_send_reg;
 reg[6:0] echo_vel_send_reg;
 reg[8:0] echo_pb_send_reg;
+reg[1:0] echo_cc1_send_reg;
 reg[speed-1:0] echo_timer = 'b1; //24
 reg started;
 reg echo_start;
@@ -61,6 +66,7 @@ assign echo_on = echo_on_send_reg;
 assign echo_note = note_send_reg;
 assign echo_vel = echo_vel_send_reg;
 assign echo_pb = echo_pb_send_reg;
+assign echo_cc1 = echo_cc1_send_reg;
 
 always @ (posedge clk) begin
     if (en) begin
@@ -72,7 +78,7 @@ always @ (posedge clk) begin
         if (t[15] == 'b1<<speed) init <= 1;
         echo_timer <= echo_timer + 'b1;
         if (echo_timer == 0) echo_timer <= 'b1;
-        if (echo_on_temp != note_on || note_temp != note_start || echo_vel_temp != vel_start || echo_pb_temp != pb_start) begin
+        if (echo_on_temp != note_on || note_temp != note_start || echo_vel_temp != vel_start || echo_pb_temp != pb_start || echo_cc1_temp != cc1_start) begin
             t[i] <= echo_timer;
             echo_on_reg[i] <= note_on;
             note_reg[i] <= note_start;
@@ -80,10 +86,12 @@ always @ (posedge clk) begin
             //else 
             echo_vel_reg[i] <= vel_start>>1;
             echo_pb_reg[i] <= pb_start;
+            echo_cc1_reg[i] <= cc1_start;
             echo_on_temp <= note_on;
             note_temp <= note_start;
             echo_vel_temp <= vel_start;
             echo_pb_temp <= pb_start;
+            echo_cc1_temp <= cc1_start;
             i <= i + 'b1;
         end
         for (int ii = 0; ii < 16; ii = ii + 1) begin
@@ -92,10 +100,12 @@ always @ (posedge clk) begin
                 note_send_reg <= note_reg[ii];
                 echo_vel_send_reg <= echo_vel_reg[ii];
                 echo_pb_send_reg <= echo_pb_reg[ii];
+                echo_cc1_send_reg <= echo_cc1_reg[ii];
                 echo_on_reg[ii] <= 0;
                 note_reg[ii] <= 0;
                 echo_vel_reg[ii] <= 0;
                 echo_pb_reg[ii] <= 0;
+                echo_cc1_reg[ii] <= 0;
                 t[ii] <= 'b1<<speed;
             end
         end
