@@ -216,7 +216,7 @@ localparam CONF_STR = {
 	"-;",
 	"O[3],Musical Gamepad,Off,On;",
 	"-;",
-	"DBO[68:67],Midi Ch 1 Voice,FM,PSG,Noise;",
+	"DBO[68:67],Midi Ch 1 Voice,FM,PSG,Noise;", 
 	"-;",
 	"P1,FM0 Settings;",
 	"P1-;",
@@ -248,7 +248,7 @@ localparam CONF_STR = {
 	"D8P5F5,TFI,Load Custom Patch;",
 	"P5O[79],Vibrato,Off,On;",
 	"P5-;",
-	"P6,FM5 Settings;",
+	"P6,FM5 Settings;", 
 	"P6-;",
 	"P6O[77:75],Patch,Lead 1,Bass 1,Bell Lead,Custom;", 
 	"D9P6F6,TFI,Load Custom Patch;",
@@ -275,6 +275,7 @@ localparam CONF_STR = {
 	"O[85],Unison FM0 + PSG0,Off,On;",
 	"D1D5O[7],Auto-Polyphony (FM),Off,On;",
 	"-;",
+	"F7,GPB,Load Patch Bank;",
 	"F0,BIN,Load BIOS;",
 	"-;",
 	"R0,Reset;",
@@ -614,6 +615,7 @@ wire fm2_patch_download = ioctl_download & (ioctl_index[5:0] == 6'h03 || (ioctl_
 wire fm3_patch_download = ioctl_download & (ioctl_index[5:0] == 6'h04 || (ioctl_index[7:6] == 1 && ~|ioctl_index));
 wire fm4_patch_download = ioctl_download & (ioctl_index[5:0] == 6'h05 || (ioctl_index[7:6] == 1 && ~|ioctl_index));
 wire fm5_patch_download = ioctl_download & (ioctl_index[5:0] == 6'h06 || (ioctl_index[7:6] == 1 && ~|ioctl_index));
+wire p_bank_download = ioctl_download & (ioctl_index[5:0] == 6'h07 || (ioctl_index[7:6] == 1 && ~|ioctl_index));
 wire signed [15:0] FM_right;
 wire signed [15:0] FM_left;
 wire signed [15:0] FM_LPF_right;
@@ -652,6 +654,7 @@ GenMidi GenMidi
 	.fm3_patch_download(fm3_patch_download),
 	.fm4_patch_download(fm4_patch_download),
 	.fm5_patch_download(fm5_patch_download),
+	.p_bank_download(p_bank_download),
 	.ioctl_dout(ioctl_dout),
 	.ioctl_wr(ioctl_wr),
 

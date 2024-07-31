@@ -34,7 +34,9 @@ module midi_trans
     output  [6:0] cc,
     output  [6:0] cc_val,
     output        pb_send,
-    output [13:0] pb_val
+    output [13:0] pb_val,
+    output        pc_send,
+    output [6:0] pc_val
 );
 
 reg [1:0] midi_packet;
@@ -54,6 +56,10 @@ reg [6:0] pb_lsb;
 reg [6:0] pb_msb = 7'b1000000;
 reg [13:0] pb_reg;
 reg pb_send_reg;
+reg ispc;
+reg [6:0] pc_reg;
+reg [6:0] pc_val_reg;
+reg pc_send_reg;
 reg init;
 reg [25:0] timer = 'b1;
 
@@ -67,6 +73,8 @@ assign cc = cc_reg;
 assign cc_val = cc_val_reg;
 assign pb_val = pb_reg;
 assign pb_send = pb_send_reg;
+assign pc_val = pc_val_reg;
+assign pc_send = pc_send_reg;
 
 always @ (posedge clk) begin
     if (reset) begin
@@ -95,7 +103,9 @@ always @ (posedge clk) begin
         cc_send_reg <= 0;
         iscc <= 0;
         ispb <= 0;
+        ispc <= 0;
         pb_send_reg <= 0;
+        pc_send_reg <= 0;
     end
     if (midi_send) begin
         case (midi_packet)
@@ -111,6 +121,11 @@ always @ (posedge clk) begin
                     channel_reg <= midi_data[3:0];
                     midi_packet <= midi_packet + 1'b1;
                 end
+                else if (midi_data[7:4] == 4'hC) begin //midi ccs
+                    ispc <= 1;
+                    channel_reg <= midi_data[3:0];
+                    midi_packet <= midi_packet + 1'b1;
+                end
                 else if (midi_data[7:4] == 4'hE) begin //midi pitch bend
                     ispb <= 1;
                     channel_reg <= midi_data[3:0];
@@ -118,10 +133,16 @@ always @ (posedge clk) begin
                 end
             end
             2'd1: begin
-                if (iscc) cc_reg <= midi_data[6:0];
-                else if (ispb) pb_lsb <= midi_data[6:0];
-                else note_reg <= midi_data[6:0];
-                midi_packet <= midi_packet + 1'b1;
+                if (ispc) begin
+                    pc_val_reg <= midi_data[6:0];
+                    midi_packet <= 3;
+                end
+                else begin
+                    if (iscc) cc_reg <= midi_data[6:0];
+                    else if (ispb) pb_lsb <= midi_data[6:0];
+                    else note_reg <= midi_data[6:0];
+                    midi_packet <= midi_packet + 1'b1;
+                end
             end
             2'd2: begin
                 if (iscc) cc_val_reg <= midi_data[6:0];
@@ -142,6 +163,7 @@ always @ (posedge clk) begin
         cc_send_reg <= iscc;
         //pb_reg <= (pb_msb<<7)+pb_lsb;
         pb_send_reg <= ispb;
+        pc_send_reg <= ispc;
     end
 end
 
