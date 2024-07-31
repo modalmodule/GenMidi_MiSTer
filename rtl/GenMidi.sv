@@ -1134,15 +1134,15 @@ always @ (posedge clk) begin
 
 			/// FM1 Echo from FM0
 			if (echo_en) begin
-				note_on_reg[sq2_channel] <= echo_note_on_reg;
-				note_reg[sq2_channel] <= echo_note_reg;
-				velocity_reg[sq2_channel] <= echo_velocity_reg;
+				note_on_reg[1] <= echo_note_on_reg;
+				note_reg[1] <= echo_note_reg;
+				velocity_reg[1] <= echo_velocity_reg;
 				cc1_reg[1] <= echo_cc1_reg;
 				if (echo_pb_reg) begin
-					pb_count[sq2_channel] <= pb_count[sq2_channel] + 'b1;
-					pb_reg[sq2_channel] <= echo_pb_reg;
+					if (!pb_count[1]) pb_count[1] <= pb_count[1] + 'b1;
+					pb_reg[1] <= echo_pb_reg;
 				end
-				if (pb_count[sq2_channel]) pb_reg[sq2_channel] <= echo_pb_reg;
+				if (pb_count[1]) pb_reg[1] <= echo_pb_reg;
 			end
 
 			/// PSG0 Unison from FM0
@@ -1638,48 +1638,48 @@ midipb_to_gbfreq_LUT midipb_to_gbfreq_LUT3 (
 );*/
 midipb_to_Genfreq_LUT midipb_to_Genfreq_LUT0 (
 	.address (pb_lookup[0]),
-	.clock (clk),
+	.clock (gencen),
 	.q (fm_freq_pb[0])
 );
 midipb_to_Genfreq_LUT midipb_to_Genfreq_LUT1 (
 	.address (pb_lookup[1]),
-	.clock (clk),
+	.clock (gencen),
 	.q (fm_freq_pb[1])
 );
 midipb_to_Genfreq_LUT midipb_to_Genfreq_LUT2 (
 	.address (pb_lookup[2]),
-	.clock (clk),
+	.clock (gencen),
 	.q (fm_freq_pb[2])
 );
 midipb_to_Genfreq_LUT midipb_to_Genfreq_LUT3 (
 	.address (pb_lookup[3]),
-	.clock (clk),
+	.clock (gencen),
 	.q (fm_freq_pb[3])
 );
 midipb_to_Genfreq_LUT midipb_to_Genfreq_LUT4 (
 	.address (pb_lookup[4]),
-	.clock (clk),
+	.clock (gencen),
 	.q (fm_freq_pb[4])
 );
 midipb_to_Genfreq_LUT midipb_to_Genfreq_LUT5 (
 	.address (pb_lookup[5]),
-	.clock (clk),
+	.clock (gencen),
 	.q (fm_freq_pb[5])
 );
 
 midipb_to_PSGfreq_LUT midipb_to_PSGfreq_LUT0 (
 	.address (psg_pb_lookup[0]),
-	.clock (clk),
+	.clock (gencen),
 	.q (psg_freq_pb[0])
 );
 midipb_to_PSGfreq_LUT midipb_to_PSGfreq_LUT1 (
 	.address (psg_pb_lookup[1]),
-	.clock (clk),
+	.clock (gencen),
 	.q (psg_freq_pb[1])
 );
 midipb_to_PSGfreq_LUT midipb_to_PSGfreq_LUT2 (
 	.address (psg_pb_lookup[2]),
-	.clock (clk),
+	.clock (gencen),
 	.q (psg_freq_pb[2])
 );
 
@@ -1814,10 +1814,10 @@ reg [1:0] echo_cc1_reg;
 echo_gen echo_gen (
 	.en (echo_en),
 	.clk (clk),
-	.note_on (note_on_reg[sq1_channel]),
-	.note_start (note_reg[sq1_channel]),
-	.vel_start (velocity_reg[sq1_channel]),
-	.pb_start (pb_reg[sq1_channel]),
+	.note_on (note_on_reg[0]),
+	.note_start (note_reg[0]),
+	.vel_start (velocity_reg[0]),
+	.pb_start (pb_reg[0]),
 	.cc1_start (cc1_reg[0]),
 	.echo_on (echo_note_on_reg),
 	.echo_note (echo_note_reg),
