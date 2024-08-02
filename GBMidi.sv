@@ -253,6 +253,7 @@ localparam CONF_STR = {
 	"P6O[77:75],Patch,Lead 1,Bass 1,Bell Lead,Custom;", 
 	"D9P6F6,TFI,Load Custom Patch;",
 	"P6O[80],Vibrato,Off,On;",
+	"P6O[86],FM5 as sampler (DAC),Off,On;",
 	"P6-;",
 	"P7,PSG0 Settings;",
 	"P7-;",
