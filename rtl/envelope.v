@@ -39,7 +39,7 @@ reg [6:0] adjusted_vel_reg;
 assign adjusted_vel = adjusted_vel_reg;
 
 always @ (posedge clk) begin
-    if (en && decay < 'd4) begin
+    if (en) begin
         if ((note_reg != note_start || note_repeat_reg) && note_on && !started) begin
             started <= 1;
             adjusted_vel_reg <= vel_start;
@@ -51,7 +51,8 @@ always @ (posedge clk) begin
             if (adjusted_vel_reg > 1) begin
                 timer <= timer + (26'b1<<decay);
                 if (timer > 26'd33554431) begin
-                    adjusted_vel_reg <= adjusted_vel_reg - 'b1;
+                    if (adjusted_vel_reg > 7) adjusted_vel_reg <= adjusted_vel_reg - ('b1<<3);
+                    else adjusted_vel_reg <= 0;
                     timer <= 'b1;
                 end
             end

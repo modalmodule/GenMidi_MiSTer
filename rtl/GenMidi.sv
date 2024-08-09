@@ -80,8 +80,8 @@ wire duty_switch_en = status[15];
 wire vibrato[0:8] = '{status[14] | cc1_reg[0], status[31] | cc1_reg[1], status[56] | cc1_reg[2], status[78] | cc1_reg[3], status[79] | cc1_reg[4], status[80] | cc1_reg[5], status[81] | cc1_reg[6], status[82] | cc1_reg[7], status[83] | cc1_reg[8]};
 //vibrato[0] = status[14];
 wire blip_en = status[17];
-wire fade_en = status[8];
-wire [3:0] fade_speed = status[12:9];
+wire fade_en[4] = '{status[8], status[25], status[62], status[44]};
+wire [3:0] fade_speed[4] = '{status[12:9], status[29:26], status[66:63], status[48:45]};
 //pulse 2
 wire [2:0] fm1_patch = status[38:36];
 wire [2:0] fm2_patch = status[51:49];
@@ -89,6 +89,8 @@ wire [2:0] fm3_patch = status[71:69];
 wire [2:0] fm4_patch = status[74:72];
 wire [2:0] fm5_patch = status[77:75];
 wire DACen = status[86];
+wire [3:0] DTen [4] = '{0, status[87]<<3, 0, 0};
+wire modto = status[88];
 /*wire [2:0] fm1_patch = status[38:36];
 wire [2:0] fm1_patch = status[38:36];*/
 wire [1:0] duty_set2 = status[23:22];
@@ -96,8 +98,8 @@ wire modtoDuty2 = status[30];
 wire duty_switch_en2 = status[32];
 //wire vibratoo1 = status[31];
 wire blip_en2 = status[34];
-wire fade_en2 = status[25];
-wire [3:0] fade_speed2 = status[29:26];
+//wire fade_en2 = status[25];
+//wire [3:0] fade_speed2 = status[29:26];
 //wave
 wire [3:0] waveform = status[55:52];
 //wire vibratoo2 = status[56];
@@ -107,14 +109,14 @@ wire [3:0] waveform = status[55:52];
 wire blip_en3 = status[57];
 wire fall2_en = status[58];
 wire [2:0] fall2_speed = status[61:59];
-wire fade_en3 = status[62];
-wire [3:0] fade_speed3 = status[66:63];
+//wire fade_en3 = status[62];
+//wire [3:0] fade_speed3 = status[66:63];
 //noise
 wire noi_type = status[39];
 wire fall_en = status[40];
 wire [2:0] fall_speed = status[43:41];
-wire fade_en4 = status[44];
-wire [3:0] fade_speed4 = status[48:45];
+//wire fade_en4 = status[44];
+//wire [3:0] fade_speed4 = status[48:45];
 
 
 /*assign vibratoo0 = vibrato[0];
@@ -209,6 +211,8 @@ reg[9:0] PSGfrequencies[0:59] = '{
 	126, 119, 112, 106, 100, 95, 90, 84, 80, 75, 71, 67,
 	63, 60, 56, 53, 50, 48, 45, 42, 40, 38, 36, 34
 };
+
+reg[7:0] noisefreqs[6] = '{'hE6, 'hE5, 'hE4, 'hE2, 'hE1, 'hE0};
 /*
 	algorithm = 0
     feedback = 1
@@ -410,6 +414,7 @@ reg [6:0] old_velocity_reg[0:9];
 reg sustain[0:9];
 reg note_sus_on[0:9];
 reg [1:0] cc1_reg[0:8];
+reg [6:0] cc1mod_reg[0:5];
 reg [8:0] pb_reg[0:9];
 reg [8:0] pb_old_reg[0:9];
 reg [3:0] pb_count[0:9];
@@ -471,13 +476,14 @@ reg [13:0] psg_pb_lookup[0:2];
 reg [7:0] psgvalue;
 reg [1:0] psgseq[0:3];
 reg psg_wr;
+reg psgnotrig[0:3];
 
 reg[7:0] ActivePatch[252];
 reg a_patch_upd[0:5];
 reg[5:0] a_patch_i[0:5];
 
 //bit[11:0] p_address;
-localparam vib_depth = 15;
+localparam vib_depth = 20;
 
 reg DACen_reg;
 reg DACen_sent = 1;
@@ -850,9 +856,12 @@ always @ (posedge clk) begin
 							end
 						end
 						if (cc == 'd1) begin		// && modtoDuty
-							if (cc_val < 43) cc1_reg[mchan_pl_choice] <= 'd0;
-							else if (cc_val < 86) cc1_reg[mchan_pl_choice] <= 'd1;
-							else cc1_reg[mchan_pl_choice] <= 'd1;
+							if (!modto) begin
+								if (cc_val < 43) cc1_reg[mchan_pl_choice] <= 'd0;
+								else if (cc_val < 86) cc1_reg[mchan_pl_choice] <= 'd1;
+								else cc1_reg[mchan_pl_choice] <= 'd1;
+							end
+							else cc1mod_reg[mchan_pl_choice] <= cc_val;
 						end
 					end
 					else if (pc_send) begin
@@ -916,7 +925,7 @@ always @ (posedge clk) begin
 						note_reg[sq1_channel] <= 72;
 						last_joy <= 7;
 					end
-					velocity_reg[sq1_channel] <= 3;
+					velocity_reg[sq1_channel] <= 100;
 				end
 			end
 			else begin
@@ -990,7 +999,7 @@ always @ (posedge clk) begin
 					end
 				end
 			end
-			if (cc == 'd1 && modtoDuty) begin
+			if (cc == 'd1) begin  //&& modtoDuty
 				if (cc_val < 43) cc1_reg[mchannel] <= 'd0;
 				else if (cc_val < 86) cc1_reg[mchannel] <= 'd1;
 				else cc1_reg[mchannel] <= 'd2;
@@ -1022,121 +1031,6 @@ always @ (posedge clk) begin
 	end
 
 	if (gencen) begin
-		/*if (!auto_poly) begin
-			if ((patch_sel_reg[0] != fm0_patch && !p_change_reg[0]) || send_custom_patch[0] || send_p_change[0]) begin
-				patch_sent[0] <= 0;
-				patch_index[0] <= 0;
-				myaddress <= 1;
-				opoffset[0] <= 0;
-				patch_sel_reg[0] <= fm0_patch;
-				a_patch_upd[0] <= 0;
-				a_patch_i[0] <= 0;
-				send_p_change[0] <= 0;
-				if (send_custom_patch[0]) begin
-					send_custom_patch[0] <= 0;
-					c_offset[0] <= 0; 
-				end
-				else c_offset[0] <= 0; 
-			end
-			if (!echo_en && ((patch_sel_reg[1] != fm1_patch && !p_change_reg[1]) || send_custom_patch[1] || send_p_change[1])) begin
-				patch_sent[1] <= 0;
-				patch_index[1] <= 0;
-				myaddress <= 1;
-				opoffset[1] <= 0;
-				patch_sel_reg[1] <= fm1_patch;
-				a_patch_upd[1] <= 0;
-				a_patch_i[1] <= 0;
-				send_p_change[1] <= 0;
-				if (send_custom_patch[1]) begin
-					send_custom_patch[1] <= 0;
-					c_offset[1] <= 42; 
-				end
-				else c_offset[1] <= 0; 
-			end
-			if ((patch_sel_reg[2] != fm2_patch && !p_change_reg[2]) || send_custom_patch[2] || send_p_change[2]) begin
-				patch_sent[2] <= 0;
-				patch_index[2] <= 0;
-				myaddress <= 1;
-				opoffset[2] <= 0;
-				patch_sel_reg[2] <= fm2_patch;
-				a_patch_upd[2] <= 0;
-				a_patch_i[2] <= 0;
-				send_p_change[2] <= 0;
-				if (send_custom_patch[2]) begin
-					send_custom_patch[2] <= 0;
-					c_offset[2] <= 84; 
-				end
-				else c_offset[2] <= 0; 
-			end
-			if ((patch_sel_reg[3] != fm3_patch && !p_change_reg[3]) || send_custom_patch[3] || send_p_change[3]) begin
-				patch_sent[3] <= 0;
-				patch_index[3] <= 0;
-				myaddress <= 3;
-				opoffset[3] <= 0;
-				patch_sel_reg[3] <= fm3_patch;
-				a_patch_upd[3] <= 0;
-				a_patch_i[3] <= 0;
-				send_p_change[3] <= 0;
-				if (send_custom_patch[3]) begin
-					send_custom_patch[3] <= 0;
-					c_offset[3] <= 126; 
-				end
-				else c_offset[3] <= 0; 
-			end
-			if ((patch_sel_reg[4] != fm4_patch && !p_change_reg[4]) || send_custom_patch[4] || send_p_change[4]) begin
-				patch_sent[4] <= 0;
-				patch_index[4] <= 0;
-				myaddress <= 3;
-				opoffset[4] <= 0;
-				patch_sel_reg[4] <= fm4_patch;
-				a_patch_upd[4] <= 0;
-				a_patch_i[4] <= 0;
-				send_p_change[4] <= 0;
-				if (send_custom_patch[4]) begin
-					send_custom_patch[4] <= 0;
-					c_offset[4] <= 168; 
-				end
-				else c_offset[4] <= 0; 
-			end
-			if ((patch_sel_reg[5] != fm5_patch && !p_change_reg[5]) || send_custom_patch[5] || send_p_change[5]) begin
-				patch_sent[5] <= 0;
-				patch_index[5] <= 0;
-				myaddress <= 3;
-				opoffset[5] <= 0;
-				patch_sel_reg[5] <= fm5_patch;
-				a_patch_upd[5] <= 0;
-				a_patch_i[5] <= 0;
-				send_p_change[5] <= 0;
-				if (send_custom_patch[5]) begin
-					send_custom_patch[5] <= 0;
-					c_offset[5] <= 210; 
-				end
-				else c_offset[5] <= 0; 
-			end
-			if (echo_en && patch_sel_reg[1] != fm0_patch || send_custom_patch[0]) begin
-				c_offset[1] <= 0;
-				patch_sent[1] <= 0;
-				patch_index[1] <= 0;
-				myaddress <= 1;
-				opoffset[1] <= 0;
-				patch_sel_reg[1] <= fm0_patch;
-				a_patch_upd[1] <= 0;
-				a_patch_i[1] <= 0;
-			end
-		end
-		else if (patch_sel_reg[0] != fm0_patch || patch_sel_reg[1] != fm0_patch || patch_sel_reg[2] != fm0_patch || patch_sel_reg[3] != fm0_patch || patch_sel_reg[4] != fm0_patch || patch_sel_reg[5] != fm0_patch || send_custom_patch[0]) begin
-			for (int ii = 0; ii < 6; ii = ii + 1) begin
-				c_offset[ii] <= 0; 
-				patch_sent[ii] <= 0;
-				patch_index[ii] <= 0;
-				opoffset[ii] <= 0;
-				patch_sel_reg[ii] <= fm0_patch;
-				a_patch_upd[ii] <= 0;
-				a_patch_i[ii] <= 0;
-			end
-			myaddress <= 1;
-			send_custom_patch[0] <= 0;
-		end*/
 		///VOICE PER CHANNEL///
 			/// FM ///
 			for (int ii = 0; ii < 6; ii = ii + 1) begin
@@ -1286,7 +1180,7 @@ always @ (posedge clk) begin
 				if (note_on_reg[ii]) begin
 					if (!psg_on[ii-6]) begin
 						if (pb_count[ii] && ii < 9) begin
-							psg_pb_lookup[ii-6] <= ((note_reg[ii]+psgnoteoffset-2)<<7)+pb_reg[ii]; 
+							psg_pb_lookup[ii-6] <= ((note_reg[ii]+psgnoteoffset-2)<<7)+pb_reg[ii]-DTen[ii-6]; 
 							psg_freq[ii-6] <= psg_freq_pb[ii-6];
 							pb_count[ii] <= 'b1;
 							pb_old_reg[ii] <= pb_reg[ii];
@@ -1297,48 +1191,65 @@ always @ (posedge clk) begin
 						psgseq[ii-6] <= 'd0;
 						//psg_trig[ii-6] <= 1;
 					end
-					else if (ii < 9) begin
-						if (pb_count[ii]) begin
-								psg_pb_lookup[ii-6] <= ((note_reg[ii]-psgnoteoffset-2)<<7)+pb_reg[ii]+(vibrato[ii]?(vib[ii]-vib_depth):0); 
+					else begin
+						if (ii < 9) begin
+							if (pb_count[ii]) begin
+									psg_pb_lookup[ii-6] <= ((note_reg[ii]-psgnoteoffset-2)<<7)+pb_reg[ii]+(vibrato[ii]?(vib[ii]-vib_depth):0)-DTen[ii-6]; 
+									if (psg_freq[ii-6] != psg_freq_pb[ii-6]) begin
+										psg_freq[ii-6] <= psg_freq_pb[ii-6];
+										psg_sent[ii-6] <= 0;
+										psgseq[ii-6] <= 'd0;
+										if (pb_old_reg[ii] != pb_reg[ii]) begin
+											//psg_trig[ii-6] <= 0;
+											pb_old_reg[ii] <= pb_reg[ii];
+										end
+										/*else if (vibrato[ii] && vib_start[ii]) psg_trig[ii-6] <= 0;
+										else psg_trig[ii-6] <= 1;*/
+									end
+								pb_count[ii] <= 'b1;
+							end
+							else if (vibrato[ii]) begin
+								psg_pb_lookup[ii-6] <= ((note_reg[ii]-psgnoteoffset)<<7)+(vib[ii]-vib_depth)-DTen[ii-6]; 
 								if (psg_freq[ii-6] != psg_freq_pb[ii-6]) begin
 									psg_freq[ii-6] <= psg_freq_pb[ii-6];
 									psg_sent[ii-6] <= 0;
 									psgseq[ii-6] <= 'd0;
-									if (pb_old_reg[ii] != pb_reg[ii]) begin
-										//psg_trig[ii-6] <= 0;
-										pb_old_reg[ii] <= pb_reg[ii];
-									end
-									/*else if (vibrato[ii] && vib_start[ii]) psg_trig[ii-6] <= 0;
+									/*if (vibrato[ii] && vib_start[ii]) psg_trig[ii-6] <= 0;
 									else psg_trig[ii-6] <= 1;*/
 								end
-							pb_count[ii] <= 'b1;
-						end
-						else if (vibrato[ii]) begin
-							psg_pb_lookup[ii-6] <= ((note_reg[ii]-psgnoteoffset)<<7)+(vib[ii]-vib_depth); 
-							if (psg_freq[ii-6] != psg_freq_pb[ii-6]) begin
-								psg_freq[ii-6] <= psg_freq_pb[ii-6];
+							end
+							else if (DTen[ii-6]) begin
+								psg_pb_lookup[ii-6] <= ((note_reg[ii]-psgnoteoffset)<<7)-DTen[ii-6]; 
+								if (psg_freq[ii-6] != psg_freq_pb[ii-6]) begin
+									psg_freq[ii-6] <= psg_freq_pb[ii-6];
+									psg_sent[ii-6] <= 0;
+									psgseq[ii-6] <= 'd0;
+								end
+							end
+							else if (psg_freq[ii-6] != PSGfrequencies[note_reg[ii]-psgnoteoffset]) begin
+								psg_freq[ii-6] <= PSGfrequencies[note_reg[ii]-psgnoteoffset]; 
 								psg_sent[ii-6] <= 0;
 								psgseq[ii-6] <= 'd0;
-								/*if (vibrato[ii] && vib_start[ii]) psg_trig[ii-6] <= 0;
-								else psg_trig[ii-6] <= 1;*/
+								//psg_trig[ii] <= 1;
 							end
 						end
-						else if (psg_freq[ii-6] != PSGfrequencies[note_reg[ii]-psgnoteoffset]) begin
-							psg_freq[ii-6] <= PSGfrequencies[note_reg[ii]-psgnoteoffset]; 
-							psg_sent[ii-6] <= 0;
-							psgseq[ii-6] <= 'd0;
-							//psg_trig[ii] <= 1;
+						if (velocity_reg[ii] != adjusted_vel[ii-6] && fade_en[ii-6]) begin
+							if (adjusted_vel[ii-6]) begin
+								velocity_reg[ii] <= adjusted_vel[ii-6];
+								psg_sent[ii-6] <= 0;
+								psgseq[ii-6] <= 'd0;
+								psgnotrig[ii-6] <= 1;
+							end
+							else begin
+								note_on_reg[ii] <= 0;
+								if (psg_on[ii-6]) begin
+									psg_on[ii-6] <= 0;
+									psg_sent[ii-6] <= 0;
+									psgseq[ii-6] <= 'd0;
+								end
+							end
 						end
 					end
-					/*if (old_velocity_reg[ii] != velocity_reg[ii]) begin
-						old_velocity_reg[ii] <= velocity_reg[ii];
-						vel_sent[ii] <= 0;
-						vel_ready[ii] <= 0;
-						car2[ii] <= 0;
-						car3[ii] <= 0;
-						car4[ii] <= 0;
-						myaddress <= 1;
-					end*/
 					if (repeat_note[ii]) begin
 						psg_sent[ii-6] <= 0;
 						psgseq[ii-6] <= 'd0;
@@ -1718,7 +1629,10 @@ always @ (posedge clk) begin
 						case(psgseq[psg_i])
 							'd0 : begin
 								psgvalue <= 'h90 | (psg_i << 5) | (psg_on[psg_i]? (VelLut[velocity_reg[psg_i+6]]>>3) : 15); //psg volume $90 OR (channel << 5) OR attenuation   (127-velocity_reg[psg_i+6])
-								if (!psg_on[psg_i]) psg_sent[psg_i] <= 1;
+								if (!psg_on[psg_i] || psgnotrig[psg_i]) begin
+									psg_sent[psg_i] <= 1;
+									psgnotrig[psg_i] <= 0;
+								end
 								else psgseq[psg_i] <= 'd1;
 							end
 							'd1 : begin
@@ -1727,7 +1641,7 @@ always @ (posedge clk) begin
 									psgseq[psg_i] <= 'd2; 
 								end
 								else begin
-									psgvalue <= 'hE4;
+									psgvalue <= noisefreqs[note_reg[psg_i+6][2:0]];
 									psg_sent[psg_i] <= 1;
 								end
 							end
@@ -1744,42 +1658,42 @@ always @ (posedge clk) begin
 	end
 end
 
-reg [3:0] adjusted_vel[0:15];
+reg [6:0] adjusted_vel[4];
 envelope envelope (
 	.clk			(clk),
-	.en (fade_en),
-	.decay (fade_speed),
-	.note_on (note_on_reg[sq1_channel]),
-	.note_start (note_reg[sq1_channel]),
-	.vel_start (velocity_reg[sq1_channel]),
-	.adjusted_vel (adjusted_vel[sq1_channel])
+	.en (fade_en[0]),
+	.decay (fade_speed[0]),
+	.note_on (note_on_reg[6]),
+	.note_start (note_reg[6]),
+	.vel_start (velocity_reg[6]),
+	.adjusted_vel (adjusted_vel[0])
 );
 envelope envelope2 (
 	.clk			(clk),
-	.en (fade_en2),
-	.decay (fade_speed2),
-	.note_on (note_on_reg[sq2_channel]),
-	.note_start (note_reg[sq2_channel]),
-	.vel_start (velocity_reg[sq2_channel]),
-	.adjusted_vel (adjusted_vel[sq2_channel])
+	.en (fade_en[1]),
+	.decay (fade_speed[1]),
+	.note_on (note_on_reg[7]),
+	.note_start (note_reg[7]),
+	.vel_start (velocity_reg[7]),
+	.adjusted_vel (adjusted_vel[1])
 );
-envelopeW envelope3 (
+envelope envelope3 (
 	.clk			(clk),
-	.en (fade_en3),
-	.decay (fade_speed3),
-	.note_on (note_on_reg[wav_channel]),
-	.note_start (note_reg[wav_channel]),
-	.vel_start (velocity_reg[wav_channel]),
-	.adjusted_vel (adjusted_vel[wav_channel])
+	.en (fade_en[2]),
+	.decay (fade_speed[2]),
+	.note_on (note_on_reg[8]),
+	.note_start (note_reg[8]),
+	.vel_start (velocity_reg[8]),
+	.adjusted_vel (adjusted_vel[2])
 );
 envelope envelopenoise (
 	.clk			(clk),
-	.en (fade_en4),
-	.decay (fade_speed4),
-	.note_on (note_on_reg[noi_channel]),
-	.note_start (note_reg[noi_channel]),
-	.vel_start (velocity_reg[noi_channel]),
-	.adjusted_vel (adjusted_vel[noi_channel])
+	.en (fade_en[3]),
+	.decay (fade_speed[3]),
+	.note_on (note_on_reg[9]),
+	.note_start (note_reg[9]),
+	.vel_start (velocity_reg[9]),
+	.adjusted_vel (adjusted_vel[3])
 );
 
 /*midipb_to_gbfreq_LUT midipb_to_gbfreq_LUT (
