@@ -415,6 +415,7 @@ reg sustain[0:9];
 reg note_sus_on[0:9];
 reg [1:0] cc1_reg[0:8];
 reg [6:0] cc1mod_reg[0:5];
+reg [6:0] old_mod_reg[0:5];
 reg [8:0] pb_reg[0:9];
 reg [8:0] pb_old_reg[0:9];
 reg [3:0] pb_count[0:9];
@@ -448,10 +449,13 @@ reg[1:0] opoffset[0:5];
 reg[7:0] genready;
 reg[2:0] patch_sel_reg[0:5];
 reg vel_sent[0:5];
-reg vel_ready[0:5];
 reg car2[0:5];
 reg[1:0] car3[0:5];
 reg[1:0] car4[0:5];
+
+reg mod_sent[0:5];
+reg[1:0] mod2[0:5];
+reg[1:0] mod3[0:5];
 
 reg fm_trig[0:5];
 reg fm_sent[0:5];
@@ -1000,14 +1004,17 @@ always @ (posedge clk) begin
 				end
 			end
 			if (cc == 'd1) begin  //&& modtoDuty
-				if (cc_val < 43) cc1_reg[mchannel] <= 'd0;
-				else if (cc_val < 86) cc1_reg[mchannel] <= 'd1;
-				else cc1_reg[mchannel] <= 'd2;
+				if (!modto) begin
+					if (cc_val < 43) cc1_reg[0] <= 'd0;
+					else if (cc_val < 86) cc1_reg[0] <= 'd1;
+					else cc1_reg[0] <= 'd1;
+				end
+				else cc1mod_reg[0] <= cc_val;
 			end
 		end
 		else if (pb_send) begin
-			pb_count[mchannel] <= pb_count[mchannel] + 'b1;
-			pb_reg[mchannel] <= pb_val>>5;
+			pb_count[0] <= pb_count[0] + 'b1;
+			pb_reg[0] <= pb_val>>5;
 		end
 		if (auto_poly != auto_poly_set) begin
 			//wav_dac_en <= 1;
@@ -1027,6 +1034,12 @@ always @ (posedge clk) begin
 				poly_kill <= 0;*/
 				auto_poly <= auto_poly_set;
 			//end
+		end
+		for (int ii = 1; ii < 6; ii = ii + 1) begin
+			pb_count[ii] <= pb_count[0];
+			pb_reg[ii] <= pb_reg[0];
+			cc1_reg[ii] <= cc1_reg[0];
+			cc1mod_reg[ii] <= cc1mod_reg[0];
 		end
 	end
 
@@ -1108,10 +1121,16 @@ always @ (posedge clk) begin
 						if (old_velocity_reg[ii] != velocity_reg[ii]) begin
 							old_velocity_reg[ii] <= velocity_reg[ii];
 							vel_sent[ii] <= 0;
-							vel_ready[ii] <= 0;
 							car2[ii] <= 0;
 							car3[ii] <= 0;
 							car4[ii] <= 0;
+							myaddress <= 1;
+						end
+						if (old_mod_reg[ii] != cc1mod_reg[ii]) begin
+							old_mod_reg[ii] <= cc1mod_reg[ii];
+							mod_sent[ii] <= 0;
+							mod2[ii] <= 0;
+							mod3[ii] <= 0;
 							myaddress <= 1;
 						end
 						if (repeat_note[ii]) begin
@@ -1154,6 +1173,7 @@ always @ (posedge clk) begin
 				note_reg[1] <= echo_note_reg;
 				velocity_reg[1] <= echo_velocity_reg;
 				cc1_reg[1] <= echo_cc1_reg;
+				cc1mod_reg[1] <= echo_cc1mod_reg;
 				if (echo_pb_reg) begin
 					if (!pb_count[1]) pb_count[1] <= pb_count[1] + 'b1;
 					pb_reg[1] <= echo_pb_reg;
@@ -1286,7 +1306,7 @@ always @ (posedge clk) begin
 			end
 			else begin //for (int i = 0; i < 12; i = i + 1) begin
 				//// FM /////
-				if (patch_sent[i] && vel_sent[i] && fm_sent[i]) i <= i + 1;
+				if (patch_sent[i] && vel_sent[i] && mod_sent[i] && fm_sent[i]) i <= i + 1;
 				if (i > (DACen & DACen_sent? 4 : 5)) i <= 0;
 				if (!patch_sent[i]) begin
 					if (a_patch_upd[i]) begin
@@ -1357,31 +1377,25 @@ always @ (posedge clk) begin
 							case(ActivePatch[(i*42)])
 								0, 1, 2, 3, : begin
 									myvalue <= 'h4C + (i) - ((i) > 2? 3 : 0);
-									vel_ready[i] <= 1;
 								end
 								4 : begin
 									if (!car2[i]) begin
 										myvalue <= 'h48 + (i) - ((i) > 2? 3 : 0);
-										//car2[i] <= 1;
 									end
 									else begin
 										myvalue <= 'h4C + (i) - ((i) > 2? 3 : 0);
-										//vel_ready[i] <= 1;
 									end
 								end
 								5, 6 : begin
 									case(car3[i])
 										0 : begin
 											myvalue <= 'h44 + (i) - ((i) > 2? 3 : 0);
-											//car3[i] <= 1;
 										end
 										1 : begin
 											myvalue <= 'h48 + (i) - ((i) > 2? 3 : 0);
-											//car3[i] <= 2;
 										end
 										2 : begin
 											myvalue <= 'h4C + (i) - ((i) > 2? 3 : 0);
-											//vel_ready[i] <= 1;
 										end
 									endcase
 								end
@@ -1389,19 +1403,15 @@ always @ (posedge clk) begin
 									case(car4[i])
 										0 : begin
 											myvalue <= 'h40 + (i) - ((i) > 2? 3 : 0);
-											//car4[i] <= 1;
 										end
 										1 : begin
 											myvalue <= 'h44 + (i) - ((i) > 2? 3 : 0);
-											//car4[i] <= 2;
 										end
 										2 : begin
 											myvalue <= 'h48 + (i) - ((i) > 2? 3 : 0);
-											//car4[i] <= 3;
 										end
 										3 : begin
 											myvalue <= 'h4C + (i) - ((i) > 2? 3 : 0);
-											//vel_ready[i] <= 1;
 										end
 									endcase
 								end
@@ -1461,7 +1471,76 @@ always @ (posedge clk) begin
 									endcase
 								end
 							endcase
-							//if (vel_ready[i]) vel_sent[i] <= 1;
+						end
+						audio_wr <= 1;
+					end
+					else if (myaddress == 0 || myaddress == 2 || !genready[7]) audio_wr <= 0;
+				end
+				else if (!mod_sent[i]) begin
+					if (!audio_wr) begin
+						if (myaddress == 1 || myaddress == 3) begin
+							myaddress <= (i) < 3? 0 : 2;
+							case(ActivePatch[(i*42)])
+								0, 1, 2, 3, : begin
+									case(mod3[i])
+										0 : begin
+											myvalue <= 'h40 + (i) - ((i) > 2? 3 : 0);
+										end
+										1 : begin
+											myvalue <= 'h44 + (i) - ((i) > 2? 3 : 0);
+										end
+										2 : begin
+											myvalue <= 'h48 + (i) - ((i) > 2? 3 : 0);
+										end
+									endcase
+								end
+								4 : begin
+									if (!mod2[i]) begin
+										myvalue <= 'h40 + (i) - ((i) > 2? 3 : 0);
+									end
+									else begin
+										myvalue <= 'h44 + (i) - ((i) > 2? 3 : 0);
+									end
+								end
+								5, 6 : begin
+									myvalue <= 'h40 + (i) - ((i) > 2? 3 : 0);
+								end
+							endcase
+						end
+						else begin
+							myaddress <= (i) < 3? 1 : 3;
+							case(ActivePatch[(i*42)])
+								0, 1, 2, 3, : begin
+									case(mod3[i])
+										0 : begin
+											myvalue <= (127 - cc1mod_reg[i]) + (cc1mod_reg[i] > ActivePatch[(i*42)+4]? ActivePatch[(i*42)+4] : cc1mod_reg[i]);
+											mod3[i] <= 1;
+										end
+										1 : begin
+											myvalue <= (127 - cc1mod_reg[i]) + (cc1mod_reg[i] > ActivePatch[(i*42)+14]? ActivePatch[(i*42)+14] : cc1mod_reg[i]);
+											mod3[i] <= 2;
+										end
+										2 : begin
+											myvalue <= (127 - cc1mod_reg[i]) + (cc1mod_reg[i] > ActivePatch[(i*42)+24]? ActivePatch[(i*42)+24] : cc1mod_reg[i]);
+											mod_sent[i] <= 1;
+										end
+									endcase
+								end
+								4 : begin
+									if (!mod2[i]) begin
+										myvalue <= (127 - cc1mod_reg[i]) + (cc1mod_reg[i] > ActivePatch[(i*42)+4]? ActivePatch[(i*42)+4] : cc1mod_reg[i]);
+										mod2[i] <= 1;
+									end
+									else begin
+										myvalue <= (127 - cc1mod_reg[i]) + (cc1mod_reg[i] > ActivePatch[(i*42)+14]? ActivePatch[(i*42)+14] : cc1mod_reg[i]);
+										mod_sent[i] <= 1;
+									end
+								end
+								5, 6 : begin
+									myvalue <= (127 - cc1mod_reg[i]) + (cc1mod_reg[i] > ActivePatch[(i*42)+4]? ActivePatch[(i*42)+4] : cc1mod_reg[i]);
+									mod_sent[i] <= 1;
+								end
+							endcase
 						end
 						audio_wr <= 1;
 					end
@@ -1885,6 +1964,7 @@ reg [6:0] echo_velocity_reg;
 //reg [3:0] echo_prev_vel_reg;
 reg [8:0] echo_pb_reg;
 reg [1:0] echo_cc1_reg;
+reg [6:0] echo_cc1mod_reg;
 
 echo_gen echo_gen (
 	.en (echo_en),
@@ -1894,11 +1974,13 @@ echo_gen echo_gen (
 	.vel_start (velocity_reg[0]),
 	.pb_start (pb_reg[0]),
 	.cc1_start (cc1_reg[0]),
+	.cc1mod_start (cc1mod_reg[0]),
 	.echo_on (echo_note_on_reg),
 	.echo_note (echo_note_reg),
 	.echo_vel (echo_velocity_reg),
 	.echo_pb (echo_pb_reg),
-	.echo_cc1 (echo_cc1_reg)
+	.echo_cc1 (echo_cc1_reg),
+	.echo_cc1mod (echo_cc1mod_reg)
 );
 
 reg psg_echo_note_on_reg;
