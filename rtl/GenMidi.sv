@@ -470,6 +470,9 @@ reg[7:0] c_offset[0:5];
 reg[6:0] p_change_reg[0:5];
 reg send_p_change[0:5];
 reg[12:0] p_bank_i;
+reg[1:0] pan_reg[0:5] = '{2'b11, 2'b11, 2'b11, 2'b11, 2'b11, 2'b11};
+reg[1:0] old_pan_reg[0:5] = '{2'b11, 2'b11, 2'b11, 2'b11, 2'b11, 2'b11};
+reg pan_sent[0:5];
 
 reg psg_sent[0:3];
 reg psg_on[0:3];
@@ -867,6 +870,11 @@ always @ (posedge clk) begin
 							end
 							else cc1mod_reg[mchan_pl_choice] <= cc_val;
 						end
+						if (cc == 10) begin
+							if (cc_val < 43) pan_reg[mchan_pl_choice] <= 2'b10;
+							else if (cc_val < 86) pan_reg[mchan_pl_choice] <= 2'b11;
+							else pan_reg[mchan_pl_choice] <= 2'b01;
+						end
 					end
 					else if (pc_send) begin
 						p_change_reg[mchan_pl_choice] <= pc_val;
@@ -1133,6 +1141,11 @@ always @ (posedge clk) begin
 							mod3[ii] <= 0;
 							myaddress <= 1;
 						end
+						if (old_pan_reg[ii] != pan_reg[ii]) begin
+							old_pan_reg[ii] <= pan_reg[ii];
+							pan_sent[ii] <= 0;
+							myaddress <= 1;
+						end
 						if (repeat_note[ii]) begin
 							fm_sent[ii] <= 0;
 							myseq[ii] <= 'd0;
@@ -1306,7 +1319,7 @@ always @ (posedge clk) begin
 			end
 			else begin //for (int i = 0; i < 12; i = i + 1) begin
 				//// FM /////
-				if (patch_sent[i] && vel_sent[i] && mod_sent[i] && fm_sent[i]) i <= i + 1;
+				if (patch_sent[i] && vel_sent[i] && mod_sent[i] && fm_sent[i] && pan_sent[i]) i <= i + 1;
 				if (i > (DACen & DACen_sent? 4 : 5)) i <= 0;
 				if (!patch_sent[i]) begin
 					if (a_patch_upd[i]) begin
@@ -1546,6 +1559,21 @@ always @ (posedge clk) begin
 					end
 					else if (myaddress == 0 || myaddress == 2 || !genready[7]) audio_wr <= 0;
 				end
+				else if (!pan_sent[i]) begin
+					if (!audio_wr) begin
+						if (myaddress == 1 || myaddress == 3) begin
+							myaddress <= (i) < 3? 0 : 2;
+							myvalue <= 'hB4 + + i - (i > 2? 3 : 0);
+						end
+						else begin
+							myaddress <= (i) < 3? 1 : 3;
+							myvalue <= pan_reg[i]<<6;
+							pan_sent[i] <= 1;
+						end
+						audio_wr <= 1;
+					end
+					else if (myaddress == 0 || myaddress == 2 || !genready[7]) audio_wr <= 0;
+				end
 				else if (!fm_sent[i]) begin
 					if (!audio_wr) begin
 						case(myseq[i])
@@ -1749,8 +1777,8 @@ envelope envelope (
 );
 envelope envelope2 (
 	.clk			(clk),
-	.en (fade_en[1]),
-	.decay (fade_speed[1]),
+	.en (echo_en? fade_en[0] : fade_en[1]),
+	.decay (echo_en? fade_speed[0] : fade_speed[1]),
 	.note_on (note_on_reg[7]),
 	.note_start (note_reg[7]),
 	.vel_start (velocity_reg[7]),
