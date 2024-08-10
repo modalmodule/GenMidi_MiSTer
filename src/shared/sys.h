@@ -35,10 +35,17 @@ unsigned char __at(0x8200) analog_l[32];//[12]; //poly
 //unsigned char __at(0x8300) analog_r[12];
 //unsigned char __at(0x8400) paddle[6];
 unsigned char __at(0x8500) spinner[12];
-unsigned char __at(0x8600) sq1[2]; //Pulse 1
-unsigned char __at(0x8700) sq2[2]; //Pulse 2
-unsigned char __at(0x8800) wav[2];
-unsigned char __at(0x8900) noi[2];
+unsigned char __at(0x8600) fm0[2]; //sq1[2]; //Pulse 1
+unsigned char __at(0x8700) fm1[2]; //sq2[2]; //Pulse 2
+unsigned char __at(0x8800) fm2[2]; //wav[2];
+unsigned char __at(0x8900) fm3[2]; //noi[2];
+unsigned char __at(0x8902) fm4[2]; //
+unsigned char __at(0x8904) fm5[2];
+unsigned char __at(0x8906) psg0[2];
+unsigned char __at(0x8908) psg1[2];
+unsigned char __at(0x890A) psg2[2];
+unsigned char __at(0x890C) noise[2];
+unsigned char __at(0x890E) patch_display;
 unsigned char __at(0x8A00) starfield1[5];
 unsigned char __at(0x8A10) starfield2[5];
 unsigned char __at(0x8A20) starfield3[5];

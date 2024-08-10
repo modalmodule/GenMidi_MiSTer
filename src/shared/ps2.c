@@ -266,11 +266,23 @@ char kbd_in[2];
 char kbd_in2[2];
 char kbd_in3[2];
 char kbd_in4[2];
+char kbd_in5[2];
+char kbd_in6[2];
+char kbd_in7[2];
+char kbd_in8[2];
+char kbd_in9[2];
+char kbd_in10[2];
 char kbd_in_poly[2][16];
 char kbd_lastclock = 0;
 char kbd_lastclock2 = 0;
 char kbd_lastclock3 = 0;
 char kbd_lastclock4 = 0;
+char kbd_lastclock5 = 0;
+char kbd_lastclock6 = 0;
+char kbd_lastclock7 = 0;
+char kbd_lastclock8 = 0;
+char kbd_lastclock9 = 0;
+char kbd_lastclock10 = 0;
 char kbd_lastclock_poly[16];
 char kbd_shift_left = 0;
 char kbd_shift_right = 0;
@@ -278,17 +290,35 @@ char kbd_scan = 0;
 char kbd_scan2 = 0;
 char kbd_scan3 = 0;
 char kbd_scan4 = 0;
+char kbd_scan5 = 0;
+char kbd_scan6 = 0;
+char kbd_scan7 = 0;
+char kbd_scan8 = 0;
+char kbd_scan9 = 0;
+char kbd_scan10 = 0;
 char kbd_scan_poly[16];
 char kbd_pressed;
 char kbd_pressed2;
 char kbd_pressed3;
 char kbd_pressed4;
+char kbd_pressed5;
+char kbd_pressed6;
+char kbd_pressed7;
+char kbd_pressed8;
+char kbd_pressed9;
+char kbd_pressed10;
 char kbd_extend;
 char kbd_ascii = 0;
 char* kbd_asciis;
 char* kbd_asciis2;
 char* kbd_asciis3;
 char* kbd_asciis4;
+char* kbd_asciis5;
+char* kbd_asciis6;
+char* kbd_asciis7;
+char* kbd_asciis8;
+char* kbd_asciis9;
+char* kbd_asciis10;
 char* kbd_asciis_poly[16];
 
 
@@ -325,12 +355,12 @@ void get_ascii_poly(int i)
 	kbd_asciis_poly[i] = notenames[kbd_scan_poly[i] % 12];
 }*/
 
-void handle_sq1()
+void handle_fm0()
 {
-	char kbd_clock = sq1[0];
+	char kbd_clock = fm0[0];
 		for (char k = 0; k < 2; k++)
 		{
-			kbd_in[k] = sq1[k];
+			kbd_in[k] = fm0[k];
 		}
 		kbd_pressed = CHECK_BIT(kbd_in[1], 1) > 0;
 		kbd_scan = kbd_in[0];
@@ -347,12 +377,12 @@ void handle_sq1()
 	kbd_lastclock = kbd_clock;
 }
 
-void handle_sq2()
+void handle_fm1()
 {
-	char kbd_clock2 = sq2[0];
+	char kbd_clock2 = fm1[0];
 		for (char k = 0; k < 2; k++)
 		{
-			kbd_in2[k] = sq2[k];
+			kbd_in2[k] = fm1[k];
 		}
 		kbd_pressed2 = CHECK_BIT(kbd_in2[1], 1) > 0;
 		kbd_scan2 = kbd_in2[0];
@@ -369,12 +399,12 @@ void handle_sq2()
 	kbd_lastclock2 = kbd_clock2;
 }
 
-void handle_wav()
+void handle_fm2()
 {
-	char kbd_clock3 = wav[0];
+	char kbd_clock3 = fm2[0];
 		for (char k = 0; k < 2; k++)
 		{
-			kbd_in3[k] = wav[k];
+			kbd_in3[k] = fm2[k];
 		}
 		kbd_pressed3 = CHECK_BIT(kbd_in3[1], 1) > 0;
 		kbd_scan3 = kbd_in3[0];
@@ -391,12 +421,12 @@ void handle_wav()
 	kbd_lastclock3 = kbd_clock3;
 }
 
-void handle_noi()
+void handle_fm3()
 {
-	char kbd_clock4 = noi[0];
+	char kbd_clock4 = fm3[0];
 		for (char k = 0; k < 2; k++)
 		{
-			kbd_in4[k] = noi[k];
+			kbd_in4[k] = fm3[k];
 		}
 		kbd_pressed4 = CHECK_BIT(kbd_in4[1], 1) > 0;
 		kbd_scan4 = kbd_in4[0];
@@ -411,6 +441,138 @@ void handle_noi()
 			kbd_asciis4 = off;
 		}
 	kbd_lastclock4 = kbd_clock4;
+}
+
+void handle_fm4()
+{
+	char kbd_clock5 = fm4[0];
+		for (char k = 0; k < 2; k++)
+		{
+			kbd_in5[k] = fm4[k];
+		}
+		kbd_pressed5 = CHECK_BIT(kbd_in5[1], 1) > 0;
+		kbd_scan5 = kbd_in5[0];
+		if (kbd_pressed5)
+		{
+			if (kbd_clock5 != kbd_lastclock5 || !strcmp(kbd_asciis5,off)) {
+				kbd_asciis5 = notenames[kbd_scan5 % 12];
+			}
+		}
+		else
+		{
+			kbd_asciis5 = off;
+		}
+	kbd_lastclock5 = kbd_clock5;
+}
+
+void handle_fm5()
+{
+	char kbd_clock6 = fm5[0];
+		for (char k = 0; k < 2; k++)
+		{
+			kbd_in6[k] = fm5[k];
+		}
+		kbd_pressed6 = CHECK_BIT(kbd_in6[1], 1) > 0;
+		kbd_scan6 = kbd_in6[0];
+		if (kbd_pressed6)
+		{
+			if (kbd_clock6 != kbd_lastclock6 || !strcmp(kbd_asciis6,off)) {
+				kbd_asciis6 = notenames[kbd_scan6 % 12];
+			}
+		}
+		else
+		{
+			kbd_asciis6 = off;
+		}
+	kbd_lastclock6 = kbd_clock6;
+}
+
+void handle_psg0()
+{
+	char kbd_clock7 = psg0[0];
+		for (char k = 0; k < 2; k++)
+		{
+			kbd_in7[k] = psg0[k];
+		}
+		kbd_pressed7 = CHECK_BIT(kbd_in7[1], 1) > 0;
+		kbd_scan7 = kbd_in7[0];
+		if (kbd_pressed7)
+		{
+			if (kbd_clock7 != kbd_lastclock7 || !strcmp(kbd_asciis7,off)) {
+				kbd_asciis7 = notenames[kbd_scan7 % 12];
+			}
+		}
+		else
+		{
+			kbd_asciis7 = off;
+		}
+	kbd_lastclock7 = kbd_clock7;
+}
+
+void handle_psg1()
+{
+	char kbd_clock8 = psg1[0];
+		for (char k = 0; k < 2; k++)
+		{
+			kbd_in8[k] = psg1[k];
+		}
+		kbd_pressed8 = CHECK_BIT(kbd_in8[1], 1) > 0;
+		kbd_scan8 = kbd_in8[0];
+		if (kbd_pressed8)
+		{
+			if (kbd_clock8 != kbd_lastclock8 || !strcmp(kbd_asciis8,off)) {
+				kbd_asciis8 = notenames[kbd_scan8 % 12];
+			}
+		}
+		else
+		{
+			kbd_asciis8 = off;
+		}
+	kbd_lastclock8 = kbd_clock8;
+}
+
+void handle_psg2()
+{
+	char kbd_clock9 = psg2[0];
+		for (char k = 0; k < 2; k++)
+		{
+			kbd_in9[k] = psg2[k];
+		}
+		kbd_pressed9 = CHECK_BIT(kbd_in9[1], 1) > 0;
+		kbd_scan9 = kbd_in9[0];
+		if (kbd_pressed9)
+		{
+			if (kbd_clock9 != kbd_lastclock9 || !strcmp(kbd_asciis9,off)) {
+				kbd_asciis9 = notenames[kbd_scan9 % 12];
+			}
+		}
+		else
+		{
+			kbd_asciis9 = off;
+		}
+	kbd_lastclock9 = kbd_clock9;
+}
+
+void handle_noise()
+{
+	char kbd_clock10 = noise[0];
+		for (char k = 0; k < 2; k++)
+		{
+			kbd_in10[k] = noise[k];
+		}
+		kbd_pressed10 = CHECK_BIT(kbd_in10[1], 1) > 0;
+		kbd_scan10 = kbd_in10[0];
+		if (kbd_pressed10)
+		{
+			if (kbd_clock10 != kbd_lastclock10 || !strcmp(kbd_asciis10,off)) {
+				kbd_asciis10 = notenames[kbd_scan10 % 12];
+			}
+		}
+		else
+		{
+			kbd_asciis10 = off;
+		}
+	kbd_lastclock10 = kbd_clock10;
 }
 
 void handle_poly()

@@ -89,9 +89,21 @@ extern char kbd_extend;
 extern char kbd_scan2;
 extern char kbd_scan3;
 extern char kbd_scan4;
+extern char kbd_scan5;
+extern char kbd_scan6;
+extern char kbd_scan7;
+extern char kbd_scan8;
+extern char kbd_scan9;
+extern char kbd_scan10;
 extern char kbd_pressed2;
 extern char kbd_pressed3;
 extern char kbd_pressed4;
+extern char kbd_pressed5;
+extern char kbd_pressed6;
+extern char kbd_pressed7;
+extern char kbd_pressed8;
+extern char kbd_pressed9;
+extern char kbd_pressed10;
 extern char kbd_extend2;
 extern char kbd_scan_poly[16];
 extern char kbd_ascii;
@@ -99,6 +111,12 @@ extern char* kbd_asciis;
 extern char* kbd_asciis2;
 extern char* kbd_asciis3;
 extern char* kbd_asciis4;
+extern char* kbd_asciis5;
+extern char* kbd_asciis6;
+extern char* kbd_asciis7;
+extern char* kbd_asciis8;
+extern char* kbd_asciis9;
+extern char* kbd_asciis10;
 extern char* kbd_asciis_poly[16];
 const extern char* off;
 
@@ -116,10 +134,16 @@ extern bool kbd_down[256];
 
 extern void get_ascii();
 
-extern void handle_sq1();
-extern void handle_sq2();
-extern void handle_wav();
-extern void handle_noi();
+extern void handle_fm0();
+extern void handle_fm1();
+extern void handle_fm2();
+extern void handle_fm3();
+extern void handle_fm4();
+extern void handle_fm5();
+extern void handle_psg0();
+extern void handle_psg1();
+extern void handle_psg2();
+extern void handle_noise();
 extern void handle_poly();
 
 #endif

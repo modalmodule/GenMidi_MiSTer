@@ -555,20 +555,27 @@ system system(
 	.VGA_B(b),
 	.VGA_HB(hblank),
 	.VGA_VB(vblank),
-	//.dn_addr(ioctl_addr[16:0]),
-	//.dn_data(ioctl_dout),
-	//.dn_wr(ioctl_wr),
-	//.dn_index(ioctl_index),
+	.dn_addr(ioctl_addr[16:0]),
+	.dn_data(ioctl_dout),
+	.dn_wr(ioctl_wr),
+	.dn_index(ioctl_index),
 	.joystick(0),
 	.analog_l(poly_note),
 	.analog_r(0),
  	.paddle(0),
 	.spinner(0),
-	.sq1(note),
-	.sq2(note2),
-	.wave(note3),
-	.noise(note4),
+	.fm0(note0),
+	.fm1(note1),
+	.fm2(note2),
+	.fm3(note3),
+	.fm4(note4),
+	.fm5(note5),
+	.psg0(note6),
+	.psg1(note7),
+	.psg2(note8),
+	.noise(note9),
 	.poly_en(status[7]),
+	.patch_display(patch_display),
 	.timestamp(timestamp),
 	.AUDIO_L(0),
 	.AUDIO_R(0)
@@ -633,11 +640,19 @@ wire signed [15:0] FM_LPF_right;
 wire signed [15:0] FM_LPF_left;
 wire signed [15:0] PRE_LPF_L;
 wire signed [15:0] PRE_LPF_R;
-wire [10:0] note;
+wire [10:0] note0;
+wire [10:0] note1;
 wire [10:0] note2;
 wire [10:0] note3;
 wire [10:0] note4;
+wire [10:0] note5;
+wire [10:0] note6;
+wire [10:0] note7;
+wire [10:0] note8;
+wire [10:0] note9;
 wire[255:0] poly_note;
+wire [6:0] patch_display;
+
 GenMidi GenMidi
 (
 	.clk(clk_sys),
@@ -653,11 +668,18 @@ GenMidi GenMidi
 	.midi_send(midi_send),
 	.midi_ready(midi_ready),
 
-	.note_out(note),
+	.note_out0(note0),
+	.note_out1(note1),
 	.note_out2(note2),
 	.note_out3(note3),
 	.note_out4(note4),
+	.note_out5(note5),
+	.note_out6(note6),
+	.note_out7(note7),
+	.note_out8(note8),
+	.note_out9(note9),
 	.poly_note_out(poly_note),
+	.patch_display(patch_display),
 
 	.fm0_patch_download(fm0_patch_download),
 	.fm1_patch_download(fm1_patch_download),

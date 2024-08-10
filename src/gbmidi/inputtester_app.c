@@ -47,13 +47,26 @@ unsigned char kbd_scan_last = 1;
 unsigned char kbd_scan_last2 = 1;
 unsigned char kbd_scan_last3 = 1;
 unsigned char kbd_scan_last4 = 1;
+unsigned char kbd_scan_last5 = 1;
+unsigned char kbd_scan_last6 = 1;
+unsigned char kbd_scan_last7 = 1;
+unsigned char kbd_scan_last8 = 1;
+unsigned char kbd_scan_last9 = 1;
+unsigned char kbd_scan_last10 = 1;
 unsigned char kbd_scan_last_poly[16];
 unsigned char kbd_ascii_last = 1;
 char* kbd_asciis_last;
 char* kbd_asciis_last2;
 char* kbd_asciis_last3;
 char* kbd_asciis_last4;
+char* kbd_asciis_last5;
+char* kbd_asciis_last6;
+char* kbd_asciis_last7;
+char* kbd_asciis_last8;
+char* kbd_asciis_last9;
+char* kbd_asciis_last10;
 char* kbd_asciis_last_poly[16];
+unsigned char patch_display_last = 150;
 unsigned char mse_button1_last = 255;
 unsigned char mse_button2_last = 255;
 signed char mse_x_last = 1;
@@ -229,10 +242,17 @@ void page_inputtester_advanced()
         write_string(label, 0xFF - (j * 2), 14, 14 + j);
     }*/
 
-    write_string("PULSE1", 0xA8, 12, 6); //0xFF, 2, 21
-    write_string("PULSE2", 0xA8, 12, 10);
-    write_string("WAVE", 0xA8, 12, 14);
-    write_string("NOISE", 0xA8, 12, 18);
+    write_string("FM0", 0xA8, 12, 5); //0xFF, 2, 21
+    write_string("FM1", 0xA8, 12, 7);
+    write_string("FM2", 0xA8, 12, 9);
+    write_string("FM3", 0xA8, 12, 11);
+    write_string("FM4", 0xA8, 12, 13);
+    write_string("FM5", 0xA8, 12, 15);
+    write_string("PSG0", 0xA8, 12, 17);
+    write_string("PSG1", 0xA8, 12, 19);
+    write_string("PSG2", 0xA8, 12, 21);
+    write_string("Noise", 0xA8, 12, 23);
+    write_string("Patch", 0xA8, 1, 5);
 
     /*write_string("MOUSE", 0xFF, 2, 23);
     write_string("WHL", 0xFF, 16, 23);
@@ -616,12 +636,18 @@ bool poly_switch;
 void inputtester_advanced()
 {
     // Handle PS/2 inputs whenever possible to improve latency
-    if (!poly_en) {
-        handle_sq1();
-        handle_sq2();
-        handle_wav();
-        handle_noi();
-    } else handle_poly();
+    //if (!poly_en) {
+        handle_fm0();
+        handle_fm1();
+        handle_fm2();
+        handle_fm3();
+        handle_fm4();
+        handle_fm5();
+        handle_psg0();
+        handle_psg1();
+        handle_psg2();
+        handle_noise();
+    //} else handle_poly();
 
     // Handle secret code detection (joypad 1 directions)
     if (HBLANK_RISING)
@@ -729,7 +755,7 @@ void inputtester_advanced()
         }*/
 
         // Scancode output
-        if (!poly_en) {
+        /*if (!poly_en) {
             if (poly_switch) {
                 for (int i = 0; i < 8; i++) {
                     write_string("                    ", 0xA8, 12, 6+i+i);
@@ -739,48 +765,114 @@ void inputtester_advanced()
                 write_string("WAVE", 0xA8, 12, 14);
                 write_string("NOISE", 0xA8, 12, 18);
                 poly_switch = 0;
-            }
-            if ((kbd_scan != kbd_scan_last || kbd_asciis != kbd_asciis_last) && kbd_scan < 89)
+            }*/
+            if ((kbd_scan != kbd_scan_last || kbd_asciis != kbd_asciis_last) && kbd_scan < 120)
             {
                 int octave = (int)kbd_scan/12;
-                write_stringf("%02u ", 0xA8, 21, 6, kbd_scan);
-                write_stringf("%u ", 0xA8, 27, 6, octave);
-                write_string(kbd_asciis, 0xA8, 25, 6);
+                write_stringf("%03u ", 0xA8, 21, 5, kbd_scan);
+                write_stringf("%u ", 0xA8, 27, 5, octave);
+                write_string(kbd_asciis, 0xA8, 25, 5);
 
                 kbd_scan_last = kbd_scan;
                 kbd_asciis_last = kbd_asciis;
             }
-            if ((kbd_scan2 != kbd_scan_last2 || kbd_asciis2 != kbd_asciis_last2) && kbd_scan2 < 89)
+            if ((kbd_scan2 != kbd_scan_last2 || kbd_asciis2 != kbd_asciis_last2) && kbd_scan2 < 120)
             {
                 int octave = (int)kbd_scan2/12;
-                write_stringf("%02u ", 0xA8, 21, 10, kbd_scan2);
-                 write_stringf("%u ", 0xA8, 27, 10, octave);
-                write_string(kbd_asciis2, 0xA8, 25, 10);
+                write_stringf("%03u ", 0xA8, 21, 7, kbd_scan2);
+                 write_stringf("%u ", 0xA8, 27, 7, octave);
+                write_string(kbd_asciis2, 0xA8, 25, 7);
 
                 kbd_scan_last2 = kbd_scan2;
                 kbd_asciis_last2 = kbd_asciis2;
             }
-            if ((kbd_scan3 != kbd_scan_last3 || kbd_asciis3 != kbd_asciis_last3) && kbd_scan3 < 89)
+            if ((kbd_scan3 != kbd_scan_last3 || kbd_asciis3 != kbd_asciis_last3) && kbd_scan3 < 120)
             {
                 int octave = (int)kbd_scan3/12;
-                write_stringf("%02u ", 0xA8, 21, 14, kbd_scan3);
-                write_stringf("%u ", 0xA8, 27, 14, octave);
-                write_string(kbd_asciis3, 0xA8, 25, 14);
+                write_stringf("%03u ", 0xA8, 21, 9, kbd_scan3);
+                write_stringf("%u ", 0xA8, 27, 9, octave);
+                write_string(kbd_asciis3, 0xA8, 25, 9);
 
                 kbd_scan_last3 = kbd_scan3;
                 kbd_asciis_last3 = kbd_asciis3;
             }
-            if ((kbd_scan4 != kbd_scan_last4 || kbd_asciis4 != kbd_asciis_last4) && kbd_scan4 < 89)
+            if ((kbd_scan4 != kbd_scan_last4 || kbd_asciis4 != kbd_asciis_last4) && kbd_scan4 < 120)
             {
                 int octave = (int)kbd_scan4/12;
-                write_stringf("%02u ", 0xA8, 21, 18, kbd_scan4);
-                write_stringf("%u ", 0xA8, 27, 18, octave);
-                write_string(kbd_asciis4, 0xA8, 25, 18);
+                write_stringf("%03u ", 0xA8, 21, 11, kbd_scan4);
+                write_stringf("%u ", 0xA8, 27, 11, octave);
+                write_string(kbd_asciis4, 0xA8, 25, 11);
 
                 kbd_scan_last4 = kbd_scan4;
                 kbd_asciis_last4 = kbd_asciis4;
             }
-        } else {
+            if ((kbd_scan5 != kbd_scan_last5 || kbd_asciis5 != kbd_asciis_last5) && kbd_scan5 < 120)
+            {
+                int octave = (int)kbd_scan5/12;
+                write_stringf("%03u ", 0xA8, 21, 13, kbd_scan5);
+                write_stringf("%u ", 0xA8, 27, 13, octave);
+                write_string(kbd_asciis5, 0xA8, 25, 13);
+
+                kbd_scan_last5 = kbd_scan5;
+                kbd_asciis_last5 = kbd_asciis5;
+            }
+            if ((kbd_scan6 != kbd_scan_last6 || kbd_asciis6 != kbd_asciis_last6) && kbd_scan6 < 120)
+            {
+                int octave = (int)kbd_scan6/12;
+                write_stringf("%03u ", 0xA8, 21, 15, kbd_scan6);
+                write_stringf("%u ", 0xA8, 27, 15, octave);
+                write_string(kbd_asciis6, 0xA8, 25, 15);
+
+                kbd_scan_last6 = kbd_scan6;
+                kbd_asciis_last6 = kbd_asciis6;
+            }
+            if ((kbd_scan7 != kbd_scan_last7 || kbd_asciis7 != kbd_asciis_last7) && kbd_scan7 < 120)
+            {
+                int octave = (int)kbd_scan7/12;
+                write_stringf("%03u ", 0xA8, 21, 17, kbd_scan7);
+                write_stringf("%u ", 0xA8, 27, 17, octave);
+                write_string(kbd_asciis7, 0xA8, 25, 17);
+
+                kbd_scan_last7 = kbd_scan7;
+                kbd_asciis_last7 = kbd_asciis7;
+            }
+            if ((kbd_scan8 != kbd_scan_last8 || kbd_asciis8 != kbd_asciis_last8) && kbd_scan8 < 120)
+            {
+                int octave = (int)kbd_scan8/12;
+                write_stringf("%03u ", 0xA8, 21, 19, kbd_scan8);
+                write_stringf("%u ", 0xA8, 27, 19, octave);
+                write_string(kbd_asciis8, 0xA8, 25, 19);
+
+                kbd_scan_last8 = kbd_scan8;
+                kbd_asciis_last8 = kbd_asciis8;
+            }
+            if ((kbd_scan9 != kbd_scan_last9 || kbd_asciis9 != kbd_asciis_last9) && kbd_scan9 < 120)
+            {
+                int octave = (int)kbd_scan9/12;
+                write_stringf("%03u ", 0xA8, 21, 21, kbd_scan9);
+                write_stringf("%u ", 0xA8, 27, 21, octave);
+                write_string(kbd_asciis9, 0xA8, 25, 21);
+
+                kbd_scan_last9 = kbd_scan9;
+                kbd_asciis_last9 = kbd_asciis9;
+            }
+            if ((kbd_scan10 != kbd_scan_last10 || kbd_asciis10 != kbd_asciis_last10) && kbd_scan10 < 120)
+            {
+                int octave = (int)kbd_scan10/12;
+                write_stringf("%03u ", 0xA8, 21, 23, kbd_scan10);
+                write_stringf("%u ", 0xA8, 27, 23, octave);
+                write_string(kbd_asciis10, 0xA8, 25, 23);
+
+                kbd_scan_last10 = kbd_scan10;
+                kbd_asciis_last10 = kbd_asciis10;
+            }
+            if (patch_display_last != patch_display)
+            {
+                if (!patch_display) {write_string("OSD", 0xA8, 7, 5);} 
+                else {write_stringf("%03u", 0xA8, 7, 5, patch_display);}
+                patch_display_last = patch_display;
+            }
+       /*} else {
             if (!poly_switch) {
                 write_string("                    ", 0xA8, 12, 10);
                 write_string("                    ", 0xA8, 12, 14);
@@ -801,7 +893,7 @@ void inputtester_advanced()
                     kbd_asciis_last_poly[i] = kbd_asciis_poly[i];
                 }
             }
-        }
+        }*/
 
        /* if (mse_changed)
         {

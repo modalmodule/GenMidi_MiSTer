@@ -50,15 +50,22 @@ module system (
 
 	// ps2 alternative interface.
 	// [8] - extended, [9] - pressed, [10] - toggles with every press/release
-	input [10:0]	sq1, //pulse 1
+	input [10:0]	fm0, 
 
 	// [0-23] mouse data, [24] - toggles with every event, [25-31] - padding,
 	// [32-39] - wheel movements, [40-47] - reserved(additional buttons)
-	input [10:0]	sq2, //pulse 2
-	input [10:0]	wave, //wave
+	input [10:0]	fm1, 
+	input [10:0]	fm2, 
+	input [10:0]	fm3, 
+	input [10:0]	fm4, 
+	input [10:0]	fm5, 
+	input [10:0]	psg0, 
+	input [10:0]	psg1, 
+	input [10:0]	psg2, 
 	input [10:0]	noise, //noise
 
 	input poly_en,
+	input [6:0]	patch_display,
 
 	// [31:0] - seconds since 1970-01-01 00:00:00, [32] - toggle with every change
 	input [32:0]	timestamp,
@@ -130,10 +137,16 @@ wire [7:0] analog_l_data_out = analog_l[{cpu_addr[5:0],3'd0} +: 8]; //[{cpu_addr
 //wire [7:0] analog_r_data_out = analog_r[{cpu_addr[3:0],3'd0} +: 8];
 //wire [7:0] paddle_data_out = paddle[{cpu_addr[2:0],3'd0} +: 8];
 wire [7:0] spinner_data_out = spinner[{cpu_addr[3:0],3'd0} +: 8];
-wire [7:0] sq1_data_out = sq1[{cpu_addr[0],3'd0} +: 8];
-wire [7:0] sq2_data_out = sq2[{cpu_addr[0],3'd0} +: 8];
-wire [7:0] wav_data_out = wave[{cpu_addr[0],3'd0} +: 8];
-wire [7:0] noi_data_out = noise[{cpu_addr[0],3'd0} +: 8];
+wire [7:0] fm0_data_out = fm0[{cpu_addr[0],3'd0} +: 8];
+wire [7:0] fm1_data_out = fm1[{cpu_addr[0],3'd0} +: 8];
+wire [7:0] fm2_data_out = fm2[{cpu_addr[0],3'd0} +: 8];
+wire [7:0] fm3_data_out = fm3[{cpu_addr[0],3'd0} +: 8];
+wire [7:0] fm4_data_out = fm4[{cpu_addr[0],3'd0} +: 8];
+wire [7:0] fm5_data_out = fm5[{cpu_addr[0],3'd0} +: 8];
+wire [7:0] psg0_data_out = psg0[{cpu_addr[0],3'd0} +: 8];
+wire [7:0] psg1_data_out = psg1[{cpu_addr[0],3'd0} +: 8];
+wire [7:0] psg2_data_out = psg2[{cpu_addr[0],3'd0} +: 8];
+wire [7:0] noise_data_out = noise[{cpu_addr[0],3'd0} +: 8];
 //wire [7:0] timestamp_data_out = timestamp[{cpu_addr[2:0],3'd0} +: 8];
 wire [7:0] timer_data_out = timer[{cpu_addr[0],3'd0} +: 8];
 wire [7:0] tilemapcontrol_data_out;
@@ -151,10 +164,18 @@ wire analog_l_cs = memory_map_addr == 8'b10000010;
 //wire analog_r_cs = memory_map_addr == 8'b10000011;
 //wire paddle_cs = memory_map_addr == 8'b1000100;
 wire spinner_cs = memory_map_addr == 8'b10000101;
-wire sq1_cs = memory_map_addr == 8'b10000110;
-wire sq2_cs = memory_map_addr == 8'b10000111;
-wire wav_cs = memory_map_addr == 8'b10001000;
-wire noi_cs = memory_map_addr == 8'b10001001;
+wire fm0_cs = memory_map_addr == 8'b10000110; //0x86 00
+wire fm1_cs = memory_map_addr == 8'b10000111;
+wire fm2_cs = memory_map_addr == 8'b10001000;
+wire fm3_cs = memory_map_addr == 8'b10001001 && cpu_addr[7:1] == 0; //0x89 00
+wire fm4_cs = memory_map_addr == 8'b10001001 && cpu_addr[7:1] == 1;
+wire fm5_cs = memory_map_addr == 8'b10001001 && cpu_addr[7:1] == 2;
+wire psg0_cs = memory_map_addr == 8'b10001001 && cpu_addr[7:1] == 3;
+wire psg1_cs = memory_map_addr == 8'b10001001 && cpu_addr[7:1] == 4;
+wire psg2_cs = memory_map_addr == 8'b10001001 && cpu_addr[7:1] == 5;
+wire noise_cs = memory_map_addr == 8'b10001001 && cpu_addr[7:1] == 6;
+wire pd_cs = cpu_addr == 16'h890E;
+
 //wire timestamp_cs = memory_map_addr == 8'b10001000;
 //wire timer_cs = memory_map_addr == 8'b10001001;
 wire starfield1_cs = memory_map_addr == 8'b10001010 && cpu_addr[5:4] == 2'b00;
@@ -260,12 +281,12 @@ wire [7:0] chmap_data_out;
 
 // Rom upload write enables
 wire pgrom_wr = dn_wr && dn_index == 8'd0;
-wire chrom_wr = dn_wr && dn_index == 8'd1;
-wire palrom_wr = dn_wr && dn_index == 8'd2;
-wire spriterom_wr = dn_wr && dn_index == 8'd3;
-wire musicrom_wr = dn_wr && dn_index == 8'd4;
-wire soundrom_wr = dn_wr && dn_index == 8'd5;
-wire tilemaprom_wr = dn_wr && dn_index == 8'd6;
+//wire chrom_wr = dn_wr && dn_index == 8'd1;
+//wire palrom_wr = dn_wr && dn_index == 8'd2;
+//wire spriterom_wr = dn_wr && dn_index == 8'd3;
+//wire musicrom_wr = dn_wr && dn_index == 8'd4;
+//wire soundrom_wr = dn_wr && dn_index == 8'd5;
+//wire tilemaprom_wr = dn_wr && dn_index == 8'd6;
 
 // Ram write enables
 wire wkram_wr = !cpu_wr_n && wkram_cs;
@@ -290,10 +311,17 @@ assign cpu_din = pgrom_cs ? pgrom_data_out :
 				 //analog_r_cs ? analog_r_data_out :
 				 //paddle_cs ? paddle_data_out :
 				 spinner_cs ? spinner_data_out :
-				 sq1_cs ? sq1_data_out :
-				 sq2_cs ? sq2_data_out :
-				 wav_cs ? wav_data_out :
-				 noi_cs ? noi_data_out :
+				 fm0_cs ? fm0_data_out :
+				 fm1_cs ? fm1_data_out :
+				 fm2_cs ? fm2_data_out :
+				 fm3_cs ? fm3_data_out :
+				 fm4_cs ? fm4_data_out :
+				 fm5_cs ? fm5_data_out :
+				 psg0_cs ? psg0_data_out :
+				 psg1_cs ? psg1_data_out :
+				 psg2_cs ? psg2_data_out :
+				 noise_cs ? noise_data_out :
+				 pd_cs ? patch_display :
 				 //timestamp_cs ? timestamp_data_out :
 				 //timer_cs ? timer_data_out :
 				 tilemapcontrol_cs ? tilemapcontrol_data_out :

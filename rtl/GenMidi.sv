@@ -31,14 +31,21 @@ module GenMidi
     input   [15:0] joystick_0,
 
     input    [7:0] midi_data,
-    input          midi_send,
+    input          midi_send, 
     output         midi_ready,
 
-    output  [10:0] note_out,
-    output  [10:0] note_out2,
+    output  [10:0] note_out0,
+    output  [10:0] note_out1,
+	output  [10:0] note_out2,
 	output  [10:0] note_out3,
 	output  [10:0] note_out4,
+    output  [10:0] note_out5,
+	output  [10:0] note_out6,
+	output  [10:0] note_out7,
+	output  [10:0] note_out8,
+    output  [10:0] note_out9,
     output [255:0] poly_note_out,
+	output [6:0] patch_display,
 
 	input fm0_patch_download,
 	input fm1_patch_download,
@@ -57,11 +64,18 @@ module GenMidi
 
 );
 
-assign note_out = (note_on_reg[sq1_channel]<<9) + (note_reg[sq1_channel]-36);
-assign note_out2 = (note_on_reg[sq2_channel]<<9) + (note_reg[sq2_channel]-36);
-assign note_out3 = (note_on_reg[wav_channel]<<9) + (note_reg[wav_channel]-36);
-assign note_out4 = (note_on_reg[noi_channel]<<9) + (note_reg[noi_channel]-36);
+assign note_out0 = (note_on_reg[0]<<9) + (note_reg[0]);
+assign note_out1 = (note_on_reg[1]<<9) + (note_reg[1]);
+assign note_out2 = (note_on_reg[2]<<9) + (note_reg[2]);
+assign note_out3 = (note_on_reg[3]<<9) + (note_reg[3]);
+assign note_out4 = (note_on_reg[4]<<9) + (note_reg[4]);
+assign note_out5 = (note_on_reg[5]<<9) + (note_reg[5]);
+assign note_out6 = (note_on_reg[6]<<9) + (note_reg[6]);
+assign note_out7 = (note_on_reg[7]<<9) + (note_reg[7]);
+assign note_out8 = (note_on_reg[8]<<9) + (note_reg[8]);
+assign note_out9 = (note_on_reg[9]<<9) + (note_reg[9]);
 assign poly_note_out = poly_note_out_combined[max];
+assign patch_display = p_change_reg[0];
 
 //OSD labels
 wire auto_poly_set = status[7];
@@ -74,11 +88,8 @@ wire[1:0] mchannel1_choice = status[68:67];
 reg[3:0] mchannel1_choice_reg;
 //pulse 1
 wire [2:0] fm0_patch = status[21:19];
-wire [1:0] duty_set = status[6:5];
-wire modtoDuty = status[13];
 wire duty_switch_en = status[15];
 wire vibrato[0:8] = '{status[14] | cc1_reg[0], status[31] | cc1_reg[1], status[56] | cc1_reg[2], status[78] | cc1_reg[3], status[79] | cc1_reg[4], status[80] | cc1_reg[5], status[81] | cc1_reg[6], status[82] | cc1_reg[7], status[83] | cc1_reg[8]};
-//vibrato[0] = status[14];
 wire blip_en = status[17];
 wire fade_en[4] = '{status[8], status[25], status[62], status[44]};
 wire [3:0] fade_speed[4] = '{status[12:9], status[29:26], status[66:63], status[48:45]};
@@ -91,40 +102,24 @@ wire [2:0] fm5_patch = status[77:75];
 wire DACen = status[86];
 wire [3:0] DTen [4] = '{0, status[87]<<3, 0, 0};
 wire modto = status[88];
-/*wire [2:0] fm1_patch = status[38:36];
-wire [2:0] fm1_patch = status[38:36];*/
+
+///FROM GBMidi
+wire [1:0] duty_set = status[6:5];
+wire modtoDuty = status[13];
 wire [1:0] duty_set2 = status[23:22];
 wire modtoDuty2 = status[30];
 wire duty_switch_en2 = status[32];
-//wire vibratoo1 = status[31];
 wire blip_en2 = status[34];
-//wire fade_en2 = status[25];
-//wire [3:0] fade_speed2 = status[29:26];
 //wave
 wire [3:0] waveform = status[55:52];
-//wire vibratoo2 = status[56];
-//wire vibratoo3 = status[78];
-//wire vibratoo4 = status[79];
-//wire vibratoo5 = status[80];
 wire blip_en3 = status[57];
 wire fall2_en = status[58];
 wire [2:0] fall2_speed = status[61:59];
-//wire fade_en3 = status[62];
-//wire [3:0] fade_speed3 = status[66:63];
 //noise
 wire noi_type = status[39];
 wire fall_en = status[40];
 wire [2:0] fall_speed = status[43:41];
-//wire fade_en4 = status[44];
-//wire [3:0] fade_speed4 = status[48:45];
-
-
-/*assign vibratoo0 = vibrato[0];
-assign vibratoo1 = vibrato[1];
-assign vibratoo2 = vibrato[2];
-assign vibratoo3 = vibrato[3];
-assign vibratoo4 = vibrato[4];
-assign vibratoo5 = vibrato[5];*/
+////
 
 
 //Midi translator//
@@ -190,6 +185,7 @@ reg[3:0] wave_square[0:31] = '{
 	4'hF, 4'hD, 4'hE, 4'hE, 4'hE, 4'hE, 4'hE, 4'hE, 4'hE, 4'hE, 4'hE, 4'hE, 4'hE, 4'hD, 4'hF, 4'h8,
 	4'h0, 4'h2, 4'h1, 4'h1, 4'h1, 4'h1, 4'h1, 4'h1, 4'h1, 4'h1, 4'h1, 4'h1, 4'h1, 4'h2, 4'h0, 4'h8
 };
+////
 
 reg[13:0] Genfrequencies[120] = '{
 	256, 271, 287, 304, 322, 342, 362, 383, 406, 430, 456, 483, 
@@ -436,7 +432,7 @@ reg poly_note_sus_on[0:15][0:max+max-1];
 reg [4:0] poly_max_voice = max+max-'b1;
 reg [4:0] poly_replace;
 reg [4:0] poly_cvoice;
-reg vfound;
+reg vfound = 1;
 reg [13:0] poly_pb_lookup[0:15][0:max+max-1];
 reg [max-1:0] poly_reset;
 
@@ -750,40 +746,32 @@ always @ (posedge clk) begin
 
 	if (ioctl_wr) begin
 		if (fm0_patch_download) begin
-			//pb_in_address = 126 + c_patch_i[0];
 			c_patch_i[0] <= c_patch_i[0] + 1;
 			c_patch_sent[0] <= 0;
 		end
 		if (fm1_patch_download) begin
-			//pb_in_address = 126 + c_patch_i[1] + 42;
 			c_patch_i[1] <= c_patch_i[1] + 1;
 			c_patch_sent[1] <= 0;
 		end
 		if (fm2_patch_download) begin
-			//pb_in_address = 126 + c_patch_i[2] + 84;
 			c_patch_i[2] <= c_patch_i[2] + 1;
 			c_patch_sent[2] <= 0;
 		end
 		if (fm3_patch_download) begin
-			//pb_in_address = 126 + c_patch_i[3] + 126;
 			c_patch_i[3] <= c_patch_i[3] + 1;
 			c_patch_sent[3] <= 0;
 		end
 		if (fm4_patch_download) begin
-			//pb_in_address = 126 + c_patch_i[4] + 168;
 			c_patch_i[4] <= c_patch_i[4] + 1;
 			c_patch_sent[4] <= 0;
 		end
 		if (fm5_patch_download) begin
-			//pb_in_address = 126 + c_patch_i[5] + 210;
 			c_patch_i[5] <= c_patch_i[5] + 1;
 			c_patch_sent[5] <= 0;
 		end
 		if (p_bank_download) begin
-			//pb_in_address = 378 + p_bank_i;
 			p_bank_i <= p_bank_i + 1;
 		end
-		//GenPatch[p_address] <= ioctl_dout;
 	end
 
 	if (reset) begin
@@ -1069,12 +1057,12 @@ always @ (posedge clk) begin
 								myaddress <= 1;
 							end
 							if (pb_count[ii]) begin
-								pb_lookup[ii] <= ((note_reg[ii]+noteoffset-2)<<7)+pb_reg[ii]; //((note_reg[i]-36-2)*pb_div)+pb_reg[i];
+								pb_lookup[ii] <= ((note_reg[ii]+noteoffset-2)<<7)+pb_reg[ii];
 								fm_freq[ii] <= fm_freq_pb[ii];
 								pb_count[ii] <= 'b1;
 								pb_old_reg[ii] <= pb_reg[ii];
 							end
-							else fm_freq[ii] <= Genfrequencies[note_reg[ii]+noteoffset]; //sq1_freq <= frequencies[note_reg[i]-36];
+							else fm_freq[ii] <= Genfrequencies[note_reg[ii]+noteoffset];
 							fm_on[ii] <= 1;
 							fm_sent[ii] <= 0;
 							myseq[ii] <= 'd0;
@@ -1082,17 +1070,11 @@ always @ (posedge clk) begin
 							old_note_reg[ii] <= note_reg[ii];
 						end
 						else if (pb_count[ii]) begin
-								pb_lookup[ii] <= ((note_reg[ii]+noteoffset-2)<<7)+pb_reg[ii]+(vibrato[ii]?(vib[ii]-vib_depth):0); //((note_reg[i]-36-2+blip[i])*pb_div)+pb_reg[i]+(vibrato?(vib[i]-12):0);
+								pb_lookup[ii] <= ((note_reg[ii]+noteoffset-2)<<7)+pb_reg[ii]+(vibrato[ii]?(vib[ii]-vib_depth):0);
 								if (fm_freq[ii] != fm_freq_pb[ii]) begin
 									fm_freq[ii] <= fm_freq_pb[ii];
 									fm_sent[ii] <= 0;
 									myseq[ii] <= 'd0;
-									/*if (pb_old_reg[ii] != pb_reg[ii]) begin
-										fm_trig[ii] <= 0;
-										pb_old_reg[ii] <= pb_reg[ii];
-									end
-									else if (vibrato[ii] && vib_start[ii]) fm_trig[ii] <= 0;
-									else fm_trig[ii] <= 1;*/
 									if (old_note_reg[ii] != note_reg[ii]) begin
 										fm_trig[ii] <= 1;
 										old_note_reg[ii] <= note_reg[ii];
@@ -1102,13 +1084,11 @@ always @ (posedge clk) begin
 							pb_count[ii] <= 'b1;
 						end
 						else if (vibrato[ii]) begin
-							pb_lookup[ii] <= ((note_reg[ii]+noteoffset)<<7)+(vib[ii]-vib_depth); //((note_reg[i]-36+blip[i])*pb_div)+(vib[i]-12);
+							pb_lookup[ii] <= ((note_reg[ii]+noteoffset)<<7)+(vib[ii]-vib_depth);
 							if (fm_freq[ii] != fm_freq_pb[ii]) begin
 								fm_freq[ii] <= fm_freq_pb[ii];
 								fm_sent[ii] <= 0;
 								myseq[ii] <= 'd0;
-								/*if (vibrato[ii] && vib_start[ii]) fm_trig[ii] <= 0;
-								else fm_trig[ii] <= 1;*/
 								if (old_note_reg[ii] != note_reg[ii]) begin
 									fm_trig[ii] <= 1;
 									old_note_reg[ii] <= note_reg[ii];
@@ -1116,8 +1096,8 @@ always @ (posedge clk) begin
 								else if (fm_sent[ii]) fm_trig[ii] <= 0;
 							end
 						end
-						else if (fm_freq[ii] != Genfrequencies[note_reg[ii]+noteoffset]) begin //frequencies[note_reg[i]-36+blip[i]]) begin
-							fm_freq[ii] <= Genfrequencies[note_reg[ii]+noteoffset]; // frequencies[note_reg[i]-36+blip[i]];
+						else if (fm_freq[ii] != Genfrequencies[note_reg[ii]+noteoffset]) begin
+							fm_freq[ii] <= Genfrequencies[note_reg[ii]+noteoffset];
 							fm_sent[ii] <= 0;
 							myseq[ii] <= 'd0;
 							if (old_note_reg[ii] != note_reg[ii]) begin
@@ -1222,7 +1202,6 @@ always @ (posedge clk) begin
 						psg_on[ii-6] <= 1;
 						psg_sent[ii-6] <= 0;
 						psgseq[ii-6] <= 'd0;
-						//psg_trig[ii-6] <= 1;
 					end
 					else begin
 						if (ii < 9) begin
@@ -1233,11 +1212,8 @@ always @ (posedge clk) begin
 										psg_sent[ii-6] <= 0;
 										psgseq[ii-6] <= 'd0;
 										if (pb_old_reg[ii] != pb_reg[ii]) begin
-											//psg_trig[ii-6] <= 0;
 											pb_old_reg[ii] <= pb_reg[ii];
 										end
-										/*else if (vibrato[ii] && vib_start[ii]) psg_trig[ii-6] <= 0;
-										else psg_trig[ii-6] <= 1;*/
 									end
 								pb_count[ii] <= 'b1;
 							end
@@ -1247,8 +1223,6 @@ always @ (posedge clk) begin
 									psg_freq[ii-6] <= psg_freq_pb[ii-6];
 									psg_sent[ii-6] <= 0;
 									psgseq[ii-6] <= 'd0;
-									/*if (vibrato[ii] && vib_start[ii]) psg_trig[ii-6] <= 0;
-									else psg_trig[ii-6] <= 1;*/
 								end
 							end
 							else if (DTen[ii-6]) begin
@@ -1263,7 +1237,6 @@ always @ (posedge clk) begin
 								psg_freq[ii-6] <= PSGfrequencies[note_reg[ii]-psgnoteoffset]; 
 								psg_sent[ii-6] <= 0;
 								psgseq[ii-6] <= 'd0;
-								//psg_trig[ii] <= 1;
 							end
 						end
 						if (velocity_reg[ii] != adjusted_vel[ii-6] && fade_en[ii-6]) begin
@@ -1286,7 +1259,6 @@ always @ (posedge clk) begin
 					if (repeat_note[ii]) begin
 						psg_sent[ii-6] <= 0;
 						psgseq[ii-6] <= 'd0;
-						//psg_trig[ii-6] <= 1;
 						repeat_note[ii] <= 0;
 					end
 				end
@@ -1295,7 +1267,6 @@ always @ (posedge clk) begin
 						psg_on[ii-6] <= 0;
 						psg_sent[ii-6] <= 0;
 						psgseq[ii-6] <= 'd0;
-						//psg_trig[ii-6] <= 1;
 					end
 				end
 			end
@@ -1553,6 +1524,7 @@ always @ (posedge clk) begin
 									myvalue <= (127 - cc1mod_reg[i]) + (cc1mod_reg[i] > ActivePatch[(i*42)+4]? ActivePatch[(i*42)+4] : cc1mod_reg[i]);
 									mod_sent[i] <= 1;
 								end
+								7 : mod_sent[i] <= 1;
 							endcase
 						end
 						audio_wr <= 1;
@@ -1578,101 +1550,53 @@ always @ (posedge clk) begin
 					if (!audio_wr) begin
 						case(myseq[i])
 							'd0 : begin
-								//if (!audio_wr) begin
-									//if (!fm_sent[i]) begin
-										if (fm_trig[i]) begin
-											myaddress <= 0; //(i) < 3? 0 : 2; //NR12 FF12 VVVV APPP Starting volume, Envelope direction, Env speed
-											myvalue <= ('h28); //gen note off REG  //velocity_reg[sq1_channel]<<4)+(fade_en?(fade_speed>3?'d7-(fade_speed-3):0):0);
-										end
-										myseq[i] <= 'd1;
-										//audio_wr <= 1; //'h28 0 'hA4 'd29 'hA0 'd33 'h28 'hF0
-									//end
-								//end
-								//else if (!genready[7]) audio_wr <= 0;
+								if (fm_trig[i]) begin
+									myaddress <= 0;
+									myvalue <= ('h28); //gen note off REG
+								end
+								myseq[i] <= 'd1;
 							end
 							'd1 : begin
-								//if (!audio_wr) begin
-									//if (!fm_sent[i]) begin
-										if (fm_trig[i]) begin
-											myaddress <= 1; //(i) < 3? 1 : 3; //NR13 FF13 FFFF FFFF Frequency LSB
-											myvalue <= 0 + ((i) < 3? (i) : (i) + 1); //gen note off VAL //sq1_freq[7:0];
-										end
-										if (!fm_on[i]) fm_sent[i] <= 1;
-										else myseq[i] <= 'd2;
-										//audio_wr <= 1;
-									//end
-								//end
-								//else audio_wr <= 0;
+								if (fm_trig[i]) begin
+									myaddress <= 1;
+									myvalue <= 0 + ((i) < 3? (i) : (i) + 1); //gen note off VAL
+								end
+								if (!fm_on[i]) fm_sent[i] <= 1;
+								else myseq[i] <= 'd2;
 							end
 							'd2 : begin
-								//if (!audio_wr) begin
-									//if (!fm_sent[i]) begin
-										myaddress <= (i) < 3? 0 : 2; //NR14 FF14 TL-- -FFF Trigger, Length enable, Frequency MSB
-										myvalue <= 'hA4 + (i) - ((i) > 2? 3 : 0); //gen freq1 address   //(8'b10000000 + sq1_freq[10:8]);
-										myseq[i] <= 'd3;
-										//audio_wr <= 1;
-									//end
-								//end
-								//else if (!genready[7]) audio_wr <= 0;
+								myaddress <= (i) < 3? 0 : 2;
+								myvalue <= 'hA4 + (i) - ((i) > 2? 3 : 0); //gen freq1 REG
+								myseq[i] <= 'd3;
 							end
 							'd3 : begin
-								//if (!audio_wr) begin
-									//if (!fm_sent[i]) begin
-										myaddress <= (i) < 3? 1 : 3;
-										myvalue <= fm_freq[i] >> 8; //(Genfrequencies[note_reg[sq1_channel]-21] >> 8); //(3 << 3) | (Genfrequencies[note_reg[sq1_channel]] >> 8); //'d29; //gen freq1 value   262 2637 1319 block size 3  (block << 3) | (freq_int >> 8) = 29
-										myseq[i] <= 'd4;
-										//audio_wr <= 1;
-									//end
-								//end 
-								//else audio_wr <= 0;
+								myaddress <= (i) < 3? 1 : 3;
+								myvalue <= fm_freq[i] >> 8; //gen freq1 VAL
+								myseq[i] <= 'd4;
 							end
 							'd4 : begin
-								//if (!audio_wr) begin
-									//if (!fm_sent[i]) begin
-										myaddress <= (i) < 3? 0 : 2;
-										myvalue <= 'hA0 + (i) - ((i) > 2? 3 : 0); //gen freq2 address
-										myseq[i] <= 'd5; 
-										//audio_wr <= 1;
-									//end
-								//end 
-								//else if (!genready[7]) audio_wr <= 0;
+								myaddress <= (i) < 3? 0 : 2;
+								myvalue <= 'hA0 + (i) - ((i) > 2? 3 : 0); //gen freq2 REG
+								myseq[i] <= 'd5; 
 							end
 							'd5 : begin
-								//if (!audio_wr) begin
-									//if (!fm_sent[i]) begin
-										myaddress <= (i) < 3? 1 : 3;
-										myvalue <= fm_freq[i] & 'hFF; //Genfrequencies[note_reg[sq1_channel]-21] & 'hFF; //Genfrequencies[note_reg[sq1_channel]] & 'hFF; //'d80; //gen freq2 value   freq_int & 'hFF = 39   1380 close enough for C#3
-										myseq[i] <= 'd6;
-										//audio_wr <= 1;
-									//end
-								//end 
-								//else audio_wr <= 0;
+								myaddress <= (i) < 3? 1 : 3;
+								myvalue <= fm_freq[i] & 'hFF; //gen freq2 VAL
+								myseq[i] <= 'd6;
 							end
 							'd6 : begin
-								//if (!audio_wr) begin
-									//if (!fm_sent[i]) begin
-										if (fm_trig[i]) begin
-											myaddress <= 0; //(i) < 3? 0 : 2;
-											myvalue <= 'h28; //gen note on address
-										end
-										myseq[i] <= 'd7;
-										//audio_wr <= 1;
-									//end
-								//end 
-								//else if (!genready[7]) audio_wr <= 0;
+								if (fm_trig[i]) begin
+									myaddress <= 0;
+									myvalue <= 'h28; //gen note on REG
+								end
+								myseq[i] <= 'd7;
 							end
 							'd7 : begin
-								//if (!audio_wr) begin
-									//if (!fm_sent[i]) begin
-										if (fm_trig[i]) begin
-											myaddress <= 1; //(i) < 3? 1 : 3;
-											myvalue <= 'hF0 + ((i) < 3? (i) : (i) + 1); //gen note on value
-										end
-										fm_sent[i] <= 1;
-										//audio_wr <= 1;
-									//end
-								//end 
-								//else audio_wr <= 0;
+								if (fm_trig[i]) begin
+									myaddress <= 1;
+									myvalue <= 'hF0 + ((i) < 3? (i) : (i) + 1); //gen note on VAL
+								end
+								fm_sent[i] <= 1;
 							end
 						endcase
 						audio_wr <= 1;
@@ -1735,7 +1659,7 @@ always @ (posedge clk) begin
 					if (!psg_wr) begin
 						case(psgseq[psg_i])
 							'd0 : begin
-								psgvalue <= 'h90 | (psg_i << 5) | (psg_on[psg_i]? (VelLut[velocity_reg[psg_i+6]]>>3) : 15); //psg volume $90 OR (channel << 5) OR attenuation   (127-velocity_reg[psg_i+6])
+								psgvalue <= 'h90 | (psg_i << 5) | (psg_on[psg_i]? (VelLut[velocity_reg[psg_i+6]]>>3) : 15); //psg volume $90 OR (channel << 5) OR attenuation
 								if (!psg_on[psg_i] || psgnotrig[psg_i]) begin
 									psg_sent[psg_i] <= 1;
 									psgnotrig[psg_i] <= 0;
@@ -1877,7 +1801,7 @@ vibrato_gen #(.depth(vib_depth)) vibrato_gen0 (
 	.vib_start (vib_start[0])
 );
 vibrato_gen #(.depth(vib_depth)) vibrato_gen1 (
-	.en (vibrato[1]),
+	.en (auto_poly? vibrato[0] : vibrato[1]),
 	.clk (clk),
 	.note_on (note_on_reg[1]),
 	.note_start (note_reg[1]),
@@ -1886,7 +1810,7 @@ vibrato_gen #(.depth(vib_depth)) vibrato_gen1 (
 	.vib_start (vib_start[1])
 );
 vibrato_gen #(.depth(vib_depth)) vibrato_gen2 (
-	.en (vibrato[2]),
+	.en (auto_poly? vibrato[0] : vibrato[2]),
 	.clk (clk),
 	.note_on (note_on_reg[2]),
 	.note_start (note_reg[2]),
@@ -1895,7 +1819,7 @@ vibrato_gen #(.depth(vib_depth)) vibrato_gen2 (
 	.vib_start (vib_start[2])
 );
 vibrato_gen #(.depth(vib_depth)) vibrato_gen3 (
-	.en (vibrato[3]),
+	.en (auto_poly? vibrato[0] : vibrato[3]),
 	.clk (clk),
 	.note_on (note_on_reg[3]),
 	.note_start (note_reg[3]),
@@ -1904,7 +1828,7 @@ vibrato_gen #(.depth(vib_depth)) vibrato_gen3 (
 	.vib_start (vib_start[3])
 );
 vibrato_gen #(.depth(vib_depth)) vibrato_gen4 (
-	.en (vibrato[4]),
+	.en (auto_poly? vibrato[0] : vibrato[4]),
 	.clk (clk),
 	.note_on (note_on_reg[4]),
 	.note_start (note_reg[4]),
@@ -1913,7 +1837,7 @@ vibrato_gen #(.depth(vib_depth)) vibrato_gen4 (
 	.vib_start (vib_start[4])
 );
 vibrato_gen #(.depth(vib_depth)) vibrato_gen5 (
-	.en (vibrato[5]),
+	.en (auto_poly? vibrato[0] : vibrato[5]),
 	.clk (clk),
 	.note_on (note_on_reg[5]),
 	.note_start (note_reg[5]),

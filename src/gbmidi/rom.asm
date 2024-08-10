@@ -44,10 +44,17 @@
 	.globl _starfield3
 	.globl _starfield2
 	.globl _starfield1
-	.globl _noi
-	.globl _wav
-	.globl _sq2
-	.globl _sq1
+	.globl _patch_display
+	.globl _noise
+	.globl _psg2
+	.globl _psg1
+	.globl _psg0
+	.globl _fm5
+	.globl _fm4
+	.globl _fm3
+	.globl _fm2
+	.globl _fm1
+	.globl _fm0
 	.globl _spinner
 	.globl _analog_l
 	.globl _joystick
@@ -65,10 +72,17 @@ _video_ctl	=	0x8001
 _joystick	=	0x8100
 _analog_l	=	0x8200
 _spinner	=	0x8500
-_sq1	=	0x8600
-_sq2	=	0x8700
-_wav	=	0x8800
-_noi	=	0x8900
+_fm0	=	0x8600
+_fm1	=	0x8700
+_fm2	=	0x8800
+_fm3	=	0x8900
+_fm4	=	0x8902
+_fm5	=	0x8904
+_psg0	=	0x8906
+_psg1	=	0x8908
+_psg2	=	0x890a
+_noise	=	0x890c
+_patch_display	=	0x890e
 _starfield1	=	0x8a00
 _starfield2	=	0x8a10
 _starfield3	=	0x8a20
