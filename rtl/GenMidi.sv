@@ -372,7 +372,7 @@ reg mono_kill;
 
 //POLY
 localparam int max = 3; //Max instances of gbc_snd
-reg audio_wrP[0:max-1];
+/*reg audio_wrP[0:max-1];
 reg [6:0] myaddressP[0:max-1];
 reg [7:0] myvalueP[0:max-1];
 reg [2:0] myseqP[0:max-1];
@@ -390,7 +390,7 @@ reg Pinit;
 reg sq1_trigP[0:max-1];
 reg sq2_trigP[0:max-1];
 reg [10:0] sq1_freq_pbP[0:max-1];
-reg [10:0] sq2_freq_pbP[0:max-1];
+reg [10:0] sq2_freq_pbP[0:max-1];*/
 reg poly_kill;
 
 //GAMEPAD
@@ -423,18 +423,18 @@ reg [6:0] note_tmp;
 reg [6:0] velocity_tmp;
 reg [3:0] channel_tmp;
 
-//POLY
-reg poly_note_on_reg[0:15][0:max+max-1];
+//POLY for GBMidi
+/*reg poly_note_on_reg[0:15][0:max+max-1];
 reg poly_repeat_note[0:15][0:max+max-1];
 reg [6:0] poly_note_reg[0:15][0:max+max-1];
 reg [3:0] poly_velocity_reg[0:15][0:max+max-1];
-reg poly_note_sus_on[0:15][0:max+max-1];
+reg poly_note_sus_on[0:15][0:max+max-1];*/
 reg [4:0] poly_max_voice = max+max-'b1;
 reg [4:0] poly_replace;
 reg [4:0] poly_cvoice;
 reg vfound = 1;
-reg [13:0] poly_pb_lookup[0:15][0:max+max-1];
-reg [max-1:0] poly_reset;
+//reg [13:0] poly_pb_lookup[0:15][0:max+max-1];
+//reg [max-1:0] poly_reset;
 
 reg midi_ready_reg = 1;
 assign midi_ready = midi_ready_reg;
@@ -794,7 +794,7 @@ always @ (posedge clk) begin
 		end*/
 		midi_ready_reg <= 1;
 	end
-	if (!Pinit) begin
+	/*if (!Pinit) begin
 		for (int ii = 0; ii < max; ii = ii + 1) begin
 			sq1_sentP[ii] <= 1;
 			sq2_sentP[ii] <= 1;
@@ -803,7 +803,7 @@ always @ (posedge clk) begin
 		end
 		note_reg[sq1_channel] <= 'd60;
 	end
-	if (sq1_sentP[max-1] == 1) Pinit <= 1;
+	if (sq1_sentP[max-1] == 1) Pinit <= 1;*/
 	if (!auto_poly) begin
 		if (!gamepadtoNotes) begin    ///VOICE PER CHANNEL///
 			//if (mchannel < 4) begin
@@ -820,8 +820,9 @@ always @ (posedge clk) begin
 					if (!mchannel) begin
 						case(mchannel1_choice)
 							0 : mchan_pl_choice <= 0;
-							1 : mchan_pl_choice <= 6;
-							2 : mchan_pl_choice <= 9;
+							1 : mchan_pl_choice <= 5;
+							2 : mchan_pl_choice <= 6;
+							3 : mchan_pl_choice <= 9;
 						endcase
 					end
 					else mchan_pl_choice <= mchannel1_choice + mchannel;
@@ -890,46 +891,60 @@ always @ (posedge clk) begin
 			end
 		end
 		else begin
+			case(mchannel1_choice)
+				0 : mchan_pl_choice <= 0;
+				1 : mchan_pl_choice <= 5;
+				2 : mchan_pl_choice <= 6;
+				3 : mchan_pl_choice <= 9;
+			endcase
 			if (joystick_0) begin
 				if (!joystick_0[last_joy]) begin
-					note_on_reg[sq1_channel] <= 1;
+					note_on_reg[mchan_pl_choice] <= 1;
 					if (joystick_0[0]) begin
-						note_reg[sq1_channel] <= 60;
+						if (!DACen || mchan_pl_choice != 5) note_reg[mchan_pl_choice] <= 60;
+						else note_reg[mchan_pl_choice] <= 36;
 						last_joy <= 0;
 					end
 					else if (joystick_0[1]) begin
-						note_reg[sq1_channel] <= 62;
+						if (!DACen || mchan_pl_choice != 5) note_reg[mchan_pl_choice] <= 62;
+						else note_reg[mchan_pl_choice] <= 38;
 						last_joy <= 1;
 					end
 					else if (joystick_0[2]) begin
-						note_reg[sq1_channel] <= 63;
+						if (!DACen || mchan_pl_choice != 5) note_reg[mchan_pl_choice] <= 63;
+						else note_reg[mchan_pl_choice] <= 36;
 						last_joy <= 2;
 					end
 					else if (joystick_0[3]) begin
-						note_reg[sq1_channel] <= 65;
+						if (!DACen || mchan_pl_choice != 5) note_reg[mchan_pl_choice] <= 65;
+						else note_reg[mchan_pl_choice] <= 38;
 						last_joy <= 3;
 					end
 					else if (joystick_0[4]) begin
-						note_reg[sq1_channel] <= 67;
+						if (!DACen || mchan_pl_choice != 5) note_reg[mchan_pl_choice] <= 67;
+						else note_reg[mchan_pl_choice] <= 36;
 						last_joy <= 4;
 					end
 					else if (joystick_0[5]) begin
-						note_reg[sq1_channel] <= 68;
+						if (!DACen || mchan_pl_choice != 5) note_reg[mchan_pl_choice] <= 68;
+						else note_reg[mchan_pl_choice] <= 38;
 						last_joy <= 5;
 					end
 					else if (joystick_0[6]) begin
-						note_reg[sq1_channel] <= 70;
+						if (!DACen || mchan_pl_choice != 5) note_reg[mchan_pl_choice] <= 70;
+						else note_reg[mchan_pl_choice] <= 36;
 						last_joy <= 6;
 					end
 					else if (joystick_0[7]) begin
-						note_reg[sq1_channel] <= 72;
+						if (!DACen || mchan_pl_choice != 5) note_reg[mchan_pl_choice] <= 72;
+						else note_reg[mchan_pl_choice] <= 38;
 						last_joy <= 7;
 					end
-					velocity_reg[sq1_channel] <= 100;
+					velocity_reg[mchan_pl_choice] <= 100;
 				end
 			end
 			else begin
-				note_on_reg[sq1_channel] <= 0;
+				note_on_reg[mchan_pl_choice] <= 0;
 				last_joy <= 8;
 			end
 		end

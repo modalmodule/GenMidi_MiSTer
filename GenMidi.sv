@@ -216,7 +216,7 @@ localparam CONF_STR = {
 	"-;",
 	"O[3],Musical Gamepad,Off,On;",
 	"-;",
-	"DBO[68:67],Midi Ch 1 Voice,FM,PSG,Noise;", 
+	"DBO[68:67],Midi Ch 1 Voice,FM0,FM5,PSG,Noise;",
 	"-;",
 	"P1,FM0 Settings;",
 	"P1-;",
@@ -314,8 +314,9 @@ wire [24:0] ps2_mouse;
 wire [15:0] ps2_mouse_ext;
 wire [32:0] timestamp;
 
+////GBMidi data
 //blip, echo, auto-duty, vib, cc1>duty, fade speed (4), fade_en, auto-poly, set duty (2)
-reg[12:0] lead_patch = 'b0111000011000; //Pulse
+/*reg[12:0] lead_patch = 'b0111000011000; //Pulse
 reg[12:0] pad_patch  = 'b0000000011101;
 reg[12:0] blip_patch = 'b1100010011010;
 reg[12:0] leadp2_patch = 'b0011000011000;
@@ -338,7 +339,7 @@ reg patch3_set;
 reg[2:0] patch3_reg;
 reg[9:0] patch4;
 reg patch4_set;
-reg[2:0] patch4_reg;
+reg[2:0] patch4_reg;*/
 /*always @ (posedge clk_sys) begin
 	//pulse 1
 	if (patch_reg != status[21:19]) begin
@@ -438,8 +439,8 @@ hps_io #(.CONF_STR(CONF_STR)) hps_io
 
 	.buttons(buttons),
 	.status(status),
-	.status_in ({status[127:0]}),
-	.status_set (patch_set | patch2_set | patch3_set | patch4_set),
+	//.status_in ({status[127:0]}),
+	//.status_set (patch_set | patch2_set | patch3_set | patch4_set),
 					//status[58],status[40],status[68]|status[67],status[7],status[62],status[44],status[25],status[32],status[30],status[16],status[15],status[13],status[8],status[3],status[5]
 	.status_menumask({status[58],status[40],status[68]|status[67],status[7],status[62],(status[77:75] != 3'd3),(status[74:72] != 3'd3),(status[71:69] != 3'd3),(status[51:49] != 3'd3),status[16],(status[38:36] != 3'd3),(status[21:19] != 3'd3),status[8],status[3],status[5]}),
 	//.status_menumask({direct_video}),
