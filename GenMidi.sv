@@ -211,6 +211,7 @@ assign VIDEO_ARY = (!ar) ? 12'd3 : 12'd0;
 localparam CONF_STR = {
 	"GenMidi;UART31250,MIDI;",
 	"-;",
+	"O[89],Visualization,Off,On;",
 	"D1O[2],Midi Source,USB,Din;",
 	"-,FOR USB SETUP UART (PRESS->);",
 	"-;",
@@ -518,7 +519,7 @@ end
 wire hblank, vblank, hs, vs;
 wire [7:0] r, g, b;
 
-wire [23:0] rgb = {r,g,b};
+wire [23:0] rgb = {!status[89]? r : (DAC_LDATA>>8),g,b};
 wire rotate_ccw = 0;
 wire no_rotate = 1;
 wire flip = 0;
