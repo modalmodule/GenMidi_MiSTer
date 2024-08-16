@@ -1,6 +1,24 @@
-# GBMidi core for [MiSTer FPGA](https://mister-devel.github.io/MkDocs_MiSTer/)
+# GenMidi core for [MiSTer FPGA](https://mister-devel.github.io/MkDocs_MiSTer/)
 
-A sound module for sending midi data to the sound hardware of a Game Boy (or multiple), utilizing gbc_snd from Gameboy_MiSTer by Tim Harbaum and Sorgelig, and using code from Input Tester by JimmyStones (see below).
+A sound/synthesis module for sending midi data to the sound hardware of the Sega Genesis/Mega Drive, utilizing jt12 by Jose Tejada Gomez, and using code from Input Tester by JimmyStones (see below), as well as from ADCTest by David Shadoff.
+
+## Features
+
+- Play sound from all 10 voice channels; 6 FM, 3 PSG, and 1 noise, using a Midi channel per voice (1 to FM0, 2 to FM1... 7 to PSG0, etc).
+- Play either with Midi devices (USB, DIN, or UDP) or even gamepad!
+- Choose from 127 built in FM patches from classic Genesis titles (see instructions).
+- Load custom FM patches (using TFI format), or even an entire 127 FM Patch Bank (made using external software, see instructions).
+- Use FM5 as DAC sampler, with Kick and Snare samples loaded (see instructions).
+- Auto-vibrato per voice.
+- Vibrato using Modwheel (or Midi CC1).
+- Modwheel to Modulating Operators (altering amount of frequency modulation) (or Midi CC2).
+- Pitch Bend wheel functionality.
+- Echo FM0 to FM1.
+- Echo PSG0 to PSG1.
+- Detune PSG1 (for classic tone when using echo PSG0 to PSG1).
+- Unison FM0 + PSG0 (or combine all three for epic lead setting).
+- Auto-Polyphony: hold multiple notes and the core routes each to an available FM voice channel (up to the 6 the YM2612 has)
+- Visual: choice between Data (notes per voice channel and patch choice), Scope (realtime waveform of summed signal), or both.
 
 ## Instructions
 
@@ -15,17 +33,27 @@ For Midi Din, use any of the existing methods to plug Din into MiSTer, then choo
 
 You can also use Binarybond007's [udpmidi version 2](https://github.com/bbond007/UDPMIDI20) alongside [loopmidi](https://www.tobias-erichsen.de/software/loopmidi.html) to [play midi from your computer over the network using UDP packets](https://www.youtube.com/watch?v=1LbvnLnmczY) (that's what the UDP_BAUD setting above is for).
 
-By default, it dedicates a midi channel per voice, so midi channel 1 to pulse1, channel 2 to pulse2, channel 3 to wave, channel 4 to noise. You can also change the default channel assignments via the "Midi Ch 1 Voice" OSD setting, where you can cycle which voice (pulse1, 2, wave or noise) is being played by midi channel 1 (the default for midi controllers), and the others cycle to suit, only ever using channels 1-4.
+By default, it dedicates a midi channel per voice, so midi channel 1 to FM0, 2 to FM1... 7 to PSG0, etc. You can also change the default channel assignments via the "Midi Ch 1 Voice" OSD setting, where you can cycle which voice (FM0, FM5 (for sample use), PSG0 or noise) is being played by midi channel 1 (the default for midi controllers). This also effects which voice the GamePad plays.
 
-In Auto-Polyphony mode, it utilizes 4 instances of the gbc_snd module to allow for 8 note polyphony (using pulse1 and 2 of each instance), using only midi channel 1!
+In Auto-Polyphony mode, it utilizes all 6 FM voice channels for 6 note polyphony, using only midi channel 1!
 
 Some settings don't work with others, as indicated by settings being greyed out. Play with it to see what can be done. Note, turning echo on while auto-poly is on will result in no sound (they can't be used together).
 
-Each voice has its own settings, in which the "Patch" setting collects settings together into patches, which you can see reflected in the settings as you cycle between the patches. Note echo and auto-poly are affected by Pulse 1 patches.
+Each voice has its own settings, primarily OSD patch setting for FM voices, vibrato for each (except noise), fade out and fade speed for PSG/noise, and Detune for PSG1 (for classic tone when using echo PSG0 to PSG1).
 
-Wave specifically has the "waveform" setting for switching between an assortment of preset waveforms. More to come (feel free to request them through whatever means of communication you'd like). Custom waveform building is planned but out of the scope of this release.
+FM patches can be changed using different methods: 
+- To start there is 4 patches to cycle between in the OSD, the last being a custom slot, where if selected, you can then load a TFI file (option directly below the patch setting), which needs to be placed in the GenMidi folder of the sd card ahead of time. 
+- If you press R on the GamePad, the patch choice will switch out of OSD mode, and instead increment within the 127 patches within the Patch Bank, the default of which has a collection of patches from classic games (listed in patchlist.txt). Pressing L will decrement the patched, and returning to "0" (Titled OSD on the data display), will revert to the OSD-based patch choice.
+- Finally, you can also load an entirely custom 127 Patch Bank, but you need to make it/acquire it and place it in the GenMidi folder first, then can choose "Load Patch Bank *.GPB" toward the bottom of the main OSD page. Creating the patch bank can be done through this. 
 
-Note the lowest usable note for all voices is C2 (2 octaves below middle C), any lower and things get... funny. The Wave "kick" patch only works as intended at C7 and above (3 octaves above middle C). Noise is "functional" past G4 or so (G above middle C).
+Midi Capability Details:
+- Midi CC1 is set to enable/disable vibrato per channel. This can be changed to affect Modulator Operators instead, via the OSD ("ModWheel to:" setting), in which case it affects their level, and thus the Frequency Modulation amount.
+- CC2 is dedicated to Modulation Operator manipulation (for those using gear that can select CCs, the "ModWheel to:" setting is for basic controller use)
+- CC10 is for panning, which the YM2612 (FM chip) is only capable of hard panning, and the PSG/noise chip has no panning capability.
+- Sustain, Pitch Bend, and velocity work as expected.
+- Program Change messages select the patch from the patch bank based on their value - 1 (midi data starts at 0 despite user facing data showing 1) for anything > 1, and revert to OSD choice for 1 (like GamePad L and R).
+
+Note the lowest usable note for PSG is A3 (1 octave+ below middle C), any lower and things get... funny. Meanwhile FM can go all the way to what would be C-1, but is mapped through the data display as C0.
 
 This is in active development so expect to see more from it in the future! :)
 
