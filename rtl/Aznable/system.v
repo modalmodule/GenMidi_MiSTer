@@ -78,7 +78,9 @@ module system (
 	output			VGA_HB,
 	output			VGA_VB,
 	output	[15:0]	AUDIO_L,
-	output	[15:0]	AUDIO_R
+	output	[15:0]	AUDIO_R,
+	output [9:0] hc,
+	output [9:0] vc
 );
 
 localparam [8:0] VGA_WIDTH = 9'd320;
@@ -88,9 +90,12 @@ wire _hb;
 wire _vb;
 assign VGA_HB = ~_hb;
 assign VGA_VB = ~_vb;
-
-wire [8:0] hcnt;
-wire [8:0] vcnt;
+assign hc = hcn;
+assign vc = vcn;
+wire [8:0] hcnt = hcn[8:0];
+wire [8:0] vcnt = vcn[8:0];
+wire [9:0] hcn;
+wire [9:0] vcn;
 
 // Display timing module from JTFRAME
 jtframe_vtimer vtimer (//#(
@@ -106,8 +111,8 @@ jtframe_vtimer vtimer (//#(
 //(
 	.clk(clk_24),//clk_vga),
 	.pxl_cen(ce_6),
-	.V(vcnt), 
-	.H(hcnt),
+	.V(vcn), 
+	.H(hcn),
 	.Hinit(),
 	.Vinit(),
 	.LHBL(_hb),

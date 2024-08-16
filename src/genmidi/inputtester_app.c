@@ -66,6 +66,7 @@ char* kbd_asciis_last8;
 char* kbd_asciis_last9;
 char* kbd_asciis_last10;
 char* kbd_asciis_last_poly[16];
+char ndataoff = 24;
 unsigned char patch_display_last = 150;
 unsigned char mse_button1_last = 255;
 unsigned char mse_button2_last = 255;
@@ -769,9 +770,9 @@ void inputtester_advanced()
             if ((kbd_scan != kbd_scan_last || kbd_asciis != kbd_asciis_last) && kbd_scan < 120)
             {
                 int octave = (int)kbd_scan/12;
-                write_stringf("%03u ", 0xA8, 21, 5, kbd_scan);
-                write_stringf("%u ", 0xA8, 27, 5, octave);
-                write_string(kbd_asciis, 0xA8, 25, 5);
+                write_stringf("%03u ", 0xA8, ndataoff, 5, kbd_scan);
+                write_stringf("%u ", 0xA8, ndataoff+6, 5, octave);
+                write_string(kbd_asciis, 0xA8, ndataoff+4, 5);
 
                 kbd_scan_last = kbd_scan;
                 kbd_asciis_last = kbd_asciis;
@@ -779,9 +780,9 @@ void inputtester_advanced()
             if ((kbd_scan2 != kbd_scan_last2 || kbd_asciis2 != kbd_asciis_last2) && kbd_scan2 < 120)
             {
                 int octave = (int)kbd_scan2/12;
-                write_stringf("%03u ", 0xA8, 21, 7, kbd_scan2);
-                 write_stringf("%u ", 0xA8, 27, 7, octave);
-                write_string(kbd_asciis2, 0xA8, 25, 7);
+                write_stringf("%03u ", 0xA8, ndataoff, 7, kbd_scan2);
+                 write_stringf("%u ", 0xA8, ndataoff+6, 7, octave);
+                write_string(kbd_asciis2, 0xA8, ndataoff+4, 7);
 
                 kbd_scan_last2 = kbd_scan2;
                 kbd_asciis_last2 = kbd_asciis2;
@@ -789,9 +790,9 @@ void inputtester_advanced()
             if ((kbd_scan3 != kbd_scan_last3 || kbd_asciis3 != kbd_asciis_last3) && kbd_scan3 < 120)
             {
                 int octave = (int)kbd_scan3/12;
-                write_stringf("%03u ", 0xA8, 21, 9, kbd_scan3);
-                write_stringf("%u ", 0xA8, 27, 9, octave);
-                write_string(kbd_asciis3, 0xA8, 25, 9);
+                write_stringf("%03u ", 0xA8, ndataoff, 9, kbd_scan3);
+                write_stringf("%u ", 0xA8, ndataoff+6, 9, octave);
+                write_string(kbd_asciis3, 0xA8, ndataoff+4, 9);
 
                 kbd_scan_last3 = kbd_scan3;
                 kbd_asciis_last3 = kbd_asciis3;
@@ -799,9 +800,9 @@ void inputtester_advanced()
             if ((kbd_scan4 != kbd_scan_last4 || kbd_asciis4 != kbd_asciis_last4) && kbd_scan4 < 120)
             {
                 int octave = (int)kbd_scan4/12;
-                write_stringf("%03u ", 0xA8, 21, 11, kbd_scan4);
-                write_stringf("%u ", 0xA8, 27, 11, octave);
-                write_string(kbd_asciis4, 0xA8, 25, 11);
+                write_stringf("%03u ", 0xA8, ndataoff, 11, kbd_scan4);
+                write_stringf("%u ", 0xA8, ndataoff+6, 11, octave);
+                write_string(kbd_asciis4, 0xA8, ndataoff+4, 11);
 
                 kbd_scan_last4 = kbd_scan4;
                 kbd_asciis_last4 = kbd_asciis4;
@@ -809,9 +810,9 @@ void inputtester_advanced()
             if ((kbd_scan5 != kbd_scan_last5 || kbd_asciis5 != kbd_asciis_last5) && kbd_scan5 < 120)
             {
                 int octave = (int)kbd_scan5/12;
-                write_stringf("%03u ", 0xA8, 21, 13, kbd_scan5);
-                write_stringf("%u ", 0xA8, 27, 13, octave);
-                write_string(kbd_asciis5, 0xA8, 25, 13);
+                write_stringf("%03u ", 0xA8, ndataoff, 13, kbd_scan5);
+                write_stringf("%u ", 0xA8, ndataoff+6, 13, octave);
+                write_string(kbd_asciis5, 0xA8, ndataoff+4, 13);
 
                 kbd_scan_last5 = kbd_scan5;
                 kbd_asciis_last5 = kbd_asciis5;
@@ -819,9 +820,9 @@ void inputtester_advanced()
             if ((kbd_scan6 != kbd_scan_last6 || kbd_asciis6 != kbd_asciis_last6) && kbd_scan6 < 120)
             {
                 int octave = (int)kbd_scan6/12;
-                write_stringf("%03u ", 0xA8, 21, 15, kbd_scan6);
-                write_stringf("%u ", 0xA8, 27, 15, octave);
-                write_string(kbd_asciis6, 0xA8, 25, 15);
+                write_stringf("%03u ", 0xA8, ndataoff, 15, kbd_scan6);
+                write_stringf("%u ", 0xA8, ndataoff+6, 15, octave);
+                write_string(kbd_asciis6, 0xA8, ndataoff+4, 15);
 
                 kbd_scan_last6 = kbd_scan6;
                 kbd_asciis_last6 = kbd_asciis6;
@@ -829,9 +830,9 @@ void inputtester_advanced()
             if ((kbd_scan7 != kbd_scan_last7 || kbd_asciis7 != kbd_asciis_last7) && kbd_scan7 < 120)
             {
                 int octave = (int)kbd_scan7/12;
-                write_stringf("%03u ", 0xA8, 21, 17, kbd_scan7);
-                write_stringf("%u ", 0xA8, 27, 17, octave);
-                write_string(kbd_asciis7, 0xA8, 25, 17);
+                write_stringf("%03u ", 0xA8, ndataoff, 17, kbd_scan7);
+                write_stringf("%u ", 0xA8, ndataoff+6, 17, octave);
+                write_string(kbd_asciis7, 0xA8, ndataoff+4, 17);
 
                 kbd_scan_last7 = kbd_scan7;
                 kbd_asciis_last7 = kbd_asciis7;
@@ -839,9 +840,9 @@ void inputtester_advanced()
             if ((kbd_scan8 != kbd_scan_last8 || kbd_asciis8 != kbd_asciis_last8) && kbd_scan8 < 120)
             {
                 int octave = (int)kbd_scan8/12;
-                write_stringf("%03u ", 0xA8, 21, 19, kbd_scan8);
-                write_stringf("%u ", 0xA8, 27, 19, octave);
-                write_string(kbd_asciis8, 0xA8, 25, 19);
+                write_stringf("%03u ", 0xA8, ndataoff, 19, kbd_scan8);
+                write_stringf("%u ", 0xA8, ndataoff+6, 19, octave);
+                write_string(kbd_asciis8, 0xA8, ndataoff+4, 19);
 
                 kbd_scan_last8 = kbd_scan8;
                 kbd_asciis_last8 = kbd_asciis8;
@@ -849,9 +850,9 @@ void inputtester_advanced()
             if ((kbd_scan9 != kbd_scan_last9 || kbd_asciis9 != kbd_asciis_last9) && kbd_scan9 < 120)
             {
                 int octave = (int)kbd_scan9/12;
-                write_stringf("%03u ", 0xA8, 21, 21, kbd_scan9);
-                write_stringf("%u ", 0xA8, 27, 21, octave);
-                write_string(kbd_asciis9, 0xA8, 25, 21);
+                write_stringf("%03u ", 0xA8, ndataoff, 21, kbd_scan9);
+                write_stringf("%u ", 0xA8, ndataoff+6, 21, octave);
+                write_string(kbd_asciis9, 0xA8, ndataoff+4, 21);
 
                 kbd_scan_last9 = kbd_scan9;
                 kbd_asciis_last9 = kbd_asciis9;
@@ -859,9 +860,9 @@ void inputtester_advanced()
             if ((kbd_scan10 != kbd_scan_last10 || kbd_asciis10 != kbd_asciis_last10) && kbd_scan10 < 120)
             {
                 int octave = (int)kbd_scan10/12;
-                write_stringf("%03u ", 0xA8, 21, 23, kbd_scan10);
-                write_stringf("%u ", 0xA8, 27, 23, octave);
-                write_string(kbd_asciis10, 0xA8, 25, 23);
+                write_stringf("%03u ", 0xA8, ndataoff, 23, kbd_scan10);
+                write_stringf("%u ", 0xA8, ndataoff+6, 23, octave);
+                write_string(kbd_asciis10, 0xA8, ndataoff+4, 23);
 
                 kbd_scan_last10 = kbd_scan10;
                 kbd_asciis_last10 = kbd_asciis10;

@@ -211,13 +211,14 @@ assign VIDEO_ARY = (!ar) ? 12'd3 : 12'd0;
 localparam CONF_STR = {
 	"GenMidi;UART31250,MIDI;",
 	"-;",
-	"O[89],Visualization,Off,On;",
+	"O[90:89],Visuals,Data,Scope,Both;",
+	"-;",
 	"D1O[2],Midi Source,USB,Din;",
 	"-,FOR USB SETUP UART (PRESS->);",
 	"-;",
 	"O[3],Musical Gamepad,Off,On;",
 	"-;",
-	"DBO[68:67],Midi Ch 1 Voice,FM0,FM5,PSG,Noise;",
+	"DBO[68:67],Selected Voice,FM0,FM5,PSG,Noise;",
 	"-;",
 	"P1,FM0 Settings;",
 	"P1-;",
@@ -515,11 +516,81 @@ always @(negedge clk_sys) begin
 	end
 end
 
+wire [15:0] DAC_RDATA_unsigned = DAC_RDATA+(16'b1<<15);
+reg [15:0] DAC_LDATA_unsigned;
+/*always @(posedge clk_sys) begin
+  if (DAC_RDATA < 16'd0) begin
+    DAC_RDATA_unsigned = -DAC_RDATA ;
+  end
+  else begin
+    DAC_RDATA_unsigned = DAC_RDATA ;
+  end
+  if (DAC_LDATA < 16'd0) begin
+    DAC_LDATA_unsigned = -DAC_LDATA ;
+  end
+  else begin
+    DAC_LDATA_unsigned = DAC_LDATA ;
+  end
+end*/
+wire [11:0] DAC_RDATA12 = DAC_RDATA>>4;
+
+///ADC Video///
+/*wire HBlank;
+wire HSync;
+wire VBlank;
+wire VSync;
+wire ce_pix;*/
+wire [7:0] video_r;
+wire [7:0] video_g;
+wire [7:0] video_b;
+
+adctest adctest
+(
+	.clk(clk_sys),
+	.reset(reset),
+	
+	.scandouble(forced_scandoubler),
+	.adc_value({DAC_RDATA_unsigned[15:4], 12'b0}),
+	.range(0),
+
+	/*.ce_pix(ce_pix),
+
+	.HBlank(hblank),
+	.HSync(hs),
+	.VBlank(vblank),
+	.VSync(vs),*/
+	.hc (hc),
+	.vc (vc),
+
+	.video_r(video_r),
+	.video_g(video_g),
+	.video_b(video_b)
+);
+
 ///////////////////   VIDEO   ////////////////////
 wire hblank, vblank, hs, vs;
 wire [7:0] r, g, b;
-
-wire [23:0] rgb = {!status[89]? r : (DAC_LDATA>>8),g,b};
+reg [7:0] rr, gg, bb;
+always @(posedge clk_sys) begin
+	case(status[90:89])
+		0: begin
+			rr = r;
+			gg = g;
+			bb = b;
+		end
+		1: begin
+			rr = video_r;
+			gg = 0;
+			bb = 0;
+		end
+		2: begin
+			rr = video_r;
+			gg = g;
+			bb = b;
+		end
+	endcase
+end
+wire [23:0] rgb = {rr, gg, bb};
 wire rotate_ccw = 0;
 wire no_rotate = 1;
 wire flip = 0;
@@ -541,6 +612,8 @@ arcade_video #(320,24) arcade_video
 wire rom_download = ioctl_download && (ioctl_index < 8'd2);
 wire reset = (RESET | status[0] | rom_download);
 assign LED_USER = rom_download;
+
+wire [9:0] hc, vc;
 
 system system(
 	.clk_24(clk_sys),
@@ -580,7 +653,9 @@ system system(
 	.patch_display(patch_display),
 	.timestamp(timestamp),
 	.AUDIO_L(0),
-	.AUDIO_R(0)
+	.AUDIO_R(0),
+	.hc (hc),
+	.vc (vc)
 );
 
 //My Clock Divider//

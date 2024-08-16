@@ -27,7 +27,7 @@ void page_frame(bool showMenuButton, bool showContinueButton)
 {
 	bool footer = showMenuButton || showContinueButton;
 	clear_chars(0);
-	write_string("Genesis Midi Module", 0b11111111, 10, 1); //MiSTer Input Tester
+	write_string(" Genesis Midi Module", 0b11111111, 10, 1); //MiSTer Input Tester
 	panel_shaded(0, 0, 39, 2, 0b00000111, 0b00000110, 0b00000100);
 	panel_shaded(0, 3, 39, footer ? 26 : 29, 0b10100100, 0b10100100, 0b01010010);
 	if (footer)

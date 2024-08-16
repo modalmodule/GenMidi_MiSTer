@@ -859,6 +859,9 @@ always @ (posedge clk) begin
 							end
 							else cc1mod_reg[mchan_pl_choice] <= cc_val;
 						end
+						if (cc == 'd2) begin
+							cc1mod_reg[mchan_pl_choice] <= cc_val;
+						end
 						if (cc == 10) begin
 							if (cc_val < 43) pan_reg[mchan_pl_choice] <= 2'b10;
 							else if (cc_val < 86) pan_reg[mchan_pl_choice] <= 2'b11;
@@ -1193,7 +1196,7 @@ always @ (posedge clk) begin
 			if (unison_en) begin
 				note_on_reg[6] <= note_on_reg[0];
 				note_reg[6] <= note_reg[0];
-				velocity_reg[6] <= velocity_reg[0];
+				if (!fade_en[0] | !note_on_reg[6]) velocity_reg[6] <= velocity_reg[0];
 				cc1_reg[6] <= cc1_reg[0];
 				if (pb_reg[0]) begin
 					pb_count[6] <= pb_count[6] + 'b1;

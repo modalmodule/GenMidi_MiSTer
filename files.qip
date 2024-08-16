@@ -3,6 +3,7 @@ set_global_assignment -name SDC_FILE GenMidi.sdc
 
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/GBMidi.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/GenMidi.sv
+set_global_assignment -name VERILOG_FILE rtl/ADCTest.v
 set_global_assignment -name VERILOG_FILE rtl/blip_gen.v
 set_global_assignment -name VERILOG_FILE rtl/duty_switch.v
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/echo_gen.sv
