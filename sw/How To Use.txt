@@ -1,0 +1,10 @@
+How To Use GenTFIstoPBank.exe:
+1) Place up to 127 TFIs of desired FM patches into "TFIs" folder, which should be in the same directory as the exe (acquire them through any means, google is your friend), any more and they will wrap, ie 128 will replace 1 etc.
+2) Double click GenTFIstoPBank.exe
+3) Profit. A .GBP file will be created in the same directory as the exe.
+
+To Use in GenMidi core:
+1) Place .GPB into GenMidi folder on MiSTer SD card.
+2) Boot up GenMidi.
+3) In the OSD, choose "Load Patch Bank *.GPB", then choose the .GPB you placed in the folder.
+4) Cycle through patches either with GamePad L and R or Midi Program Changes, your new patch bank will be after "OSD" (aka 0, or Program Change 1). Patches loaded from a .GPB will replace those of the default set only up to the amount within the .GPB, ie if the .GPB only has 20 patches, patch 21 and on will be from the default set.
