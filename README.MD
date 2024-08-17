@@ -5,7 +5,7 @@ A sound module/synthesizer for sending midi data to the sound hardware of the Se
 ## Features
 
 - Play sound from all 10 voice channels; 6 FM, 3 PSG, and 1 noise, using a Midi channel per voice (1 to FM0, 2 to FM1... 7 to PSG0, etc).
-- Play either with Midi devices (USB, DIN, or UDP) or even gamepad!
+- Play either with Midi devices (USB, DIN, or UDP) or even a GamePad!
 - Choose from 127 built in FM patches from classic Genesis titles (see instructions).
 - Load custom FM patches (using TFI format), or even an entire 127 FM Patch Bank (made using external software, see instructions).
 - Use FM5 as DAC sampler, with Kick and Snare samples loaded (see instructions).
@@ -33,7 +33,7 @@ For Midi Din, use any of the existing methods to plug Din into MiSTer, then choo
 
 You can also use Binarybond007's [udpmidi version 2](https://github.com/bbond007/UDPMIDI20) alongside [loopmidi](https://www.tobias-erichsen.de/software/loopmidi.html) to [play midi from your computer over the network using UDP packets](https://www.youtube.com/watch?v=1LbvnLnmczY) (that's what the UDP_BAUD setting above is for).
 
-By default, it dedicates a midi channel per voice, so midi channel 1 to FM0, 2 to FM1... 7 to PSG0, etc. You can also change the default channel assignments via the "Midi Ch 1 Voice" OSD setting, where you can cycle which voice (FM0, FM5 (for sample use), PSG0 or noise) is being played by midi channel 1 (the default for midi controllers). This also effects which voice the GamePad plays.
+By default, it dedicates a midi channel per voice, so midi channel 1 to FM0, 2 to FM1... 7 to PSG0, etc. You can also change the default channel assignments via the "Selected Voice" OSD setting, where you can cycle which voice (FM0, FM5 (for sample use), PSG0 or noise) is being played by midi channel 1 (the default for midi controllers). This also effects which voice the GamePad plays.
 
 In Auto-Polyphony mode, it utilizes all 6 FM voice channels for 6 note polyphony, using only midi channel 1!
 
