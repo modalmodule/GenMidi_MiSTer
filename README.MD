@@ -39,7 +39,7 @@ In Auto-Polyphony mode, it utilizes all 6 FM voice channels for 6 note polyphony
 
 Some settings don't work with others, as indicated by settings being greyed out. Play with it to see what can be done. Note, turning echo on while auto-poly is on will result in no sound (they can't be used together).
 
-Each voice channel has its own settings, for example FM voices have "Patch" which lets you choose the patch (details below), each voice channel (except noise) has "vibrato", PSG/noise have "Fade Out" and "Fade Dpeed", and PSG1 has "Detune" (for classic tone when using echo PSG0 to PSG1).
+Each voice channel has its own settings, for example FM voices have "Patch" which lets you choose the patch (details below), each voice channel (except Noise) has "Vibrato", PSG/Noise have "Fade Out" and "Fade Speed", and PSG1 has "Detune" (for classic tone when using echo PSG0 to PSG1).
 FM5 has "FM5 as sampler (DAC)" which puts FM5 in DAC mode, and subsequently can be used to play back a kick drum and snare drum sample, kick mapped to every note from C2 (2 octaves below middle C) and lower (displayed as C3 in the data display), and snare mapped to every note above that (following standard mapping for midi drum kits). Note when FM5 is in DAC mode it is no longer a part of auto-polyphony.
 
 FM patches can be changed using different methods: 
