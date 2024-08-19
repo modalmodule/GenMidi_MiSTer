@@ -1,7 +1,7 @@
 ![](https://github.com/modalmodule/GenMidi_MiSTer/blob/main/GenMidiscreenie.png)
 # GenMidi core for [MiSTer FPGA](https://mister-devel.github.io/MkDocs_MiSTer/)
 
-A sound module/synthesizer for sending midi data to the sound hardware of the Sega Genesis/Mega Drive, utilizing jt12/jt89 and misc other related modules by Jose Tejada Gomez, and using code from Input Tester by JimmyStones (see below), as well as from ADCTest by David Shadoff.
+A sound module/synthesizer for sending midi data to the sound hardware of the Sega Genesis/Mega Drive, utilizing jt12/jt89 and misc other related modules by Jose Tejada Gomez, genesis_lpf by Gregory Hogan, and using code from Input Tester by JimmyStones (see below), as well as from ADCTest by David Shadoff.
 
 ## Features
 
