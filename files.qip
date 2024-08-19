@@ -1,14 +1,10 @@
 set_global_assignment -name SYSTEMVERILOG_FILE GenMidi.sv
 set_global_assignment -name SDC_FILE GenMidi.sdc
 
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/GBMidi.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/GenMidi.sv
 set_global_assignment -name VERILOG_FILE rtl/ADCTest.v
-set_global_assignment -name VERILOG_FILE rtl/blip_gen.v
-set_global_assignment -name VERILOG_FILE rtl/duty_switch.v
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/echo_gen.sv
 set_global_assignment -name VERILOG_FILE rtl/envelope.v
-set_global_assignment -name VERILOG_FILE rtl/envelopeW.v
 set_global_assignment -name VERILOG_FILE rtl/uart_rx.v
 set_global_assignment -name VERILOG_FILE rtl/midi_trans.v
 set_global_assignment -name VERILOG_FILE rtl/mixer.v
@@ -22,7 +18,6 @@ set_global_assignment -name QIP_FILE rtl/midipb_to_Genfreq_LUT.qip
 set_global_assignment -name MIF_FILE rtl/midipb_to_PSGfreq_LUT.mif
 set_global_assignment -name QIP_FILE rtl/midipb_to_PSGfreq_LUT.qip
 
-set_global_assignment -name VHDL_FILE rtl/gbc_snd.vhd
 set_global_assignment -name VHDL_FILE rtl/speedcontrol.vhd
 
 set_global_assignment -name QIP_FILE rtl/jt12/jt12.qip
