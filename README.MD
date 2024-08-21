@@ -58,6 +58,8 @@ Midi Capability Details:
 
 Note the lowest usable note for PSG is A3 (1 octave+ below middle C), any lower and things get... funny. Meanwhile FM can go all the way to what would be C-1, but is mapped through the data display as C0.
 
+OSD Settings can be saved with "Save Settings" on OSD second screen (press right from main screen), however this doesn't save any custom TFIs or Patch Bank, but I will implement a separate "save state" feature for those (thanks @tsc for the question that led to the idea for this).
+
 This is in active development so expect to see more from it in the future! :)
 
 If you like this and would to see it (and/or future projects) flourish, please consider joining my patreon. Your contribution can directly impact the time I can spend working on these projects rather than the "day job". :)
