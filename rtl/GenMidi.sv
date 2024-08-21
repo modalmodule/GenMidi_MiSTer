@@ -88,9 +88,9 @@ wire[1:0] mchannel1_choice = status[68:67];
 reg[3:0] mchannel1_choice_reg;
 //pulse 1
 wire [2:0] fm0_patch = status[21:19];
-wire duty_switch_en = status[15];
+//wire duty_switch_en = status[15];
 wire vibrato[0:8] = '{status[14] | cc1_reg[0], status[31] | cc1_reg[1], status[56] | cc1_reg[2], status[78] | cc1_reg[3], status[79] | cc1_reg[4], status[80] | cc1_reg[5], status[81] | cc1_reg[6], status[82] | cc1_reg[7], status[83] | cc1_reg[8]};
-wire blip_en = status[17];
+//wire blip_en = status[17];
 wire fade_en[4] = '{status[8], status[25], status[62], status[44]};
 wire [3:0] fade_speed[4] = '{status[12:9], status[29:26], status[66:63], status[48:45]};
 //pulse 2
@@ -104,7 +104,7 @@ wire [3:0] DTen [4] = '{0, status[87]<<3, 0, 0};
 wire modto = status[88];
 
 ///FROM GBMidi
-wire [1:0] duty_set = status[6:5];
+/*wire [1:0] duty_set = status[6:5];
 wire modtoDuty = status[13];
 wire [1:0] duty_set2 = status[23:22];
 wire modtoDuty2 = status[30];
@@ -118,7 +118,7 @@ wire [2:0] fall2_speed = status[61:59];
 //noise
 wire noi_type = status[39];
 wire fall_en = status[40];
-wire [2:0] fall_speed = status[43:41];
+wire [2:0] fall_speed = status[43:41];*/
 ////
 
 
@@ -1892,7 +1892,7 @@ vibrato_gen #(.depth(vib_depth)) vibrato_genPSG2 (
 	.vib_start (vib_start[8])
 );
 
-reg [1:0] duty_switch_reg[0:15];
+/*reg [1:0] duty_switch_reg[0:15];
 duty_switch duty_switch (
 	.en (duty_switch_en),
 	.clk (clk),
@@ -1926,7 +1926,7 @@ pitchfallW pitchfall2 (
 	.note_on (note_on_reg[wav_channel]),
 	.note_start (note_reg[wav_channel]),
 	.fall_amount (fall2_amount_reg)
-);
+);*/
 
 reg echo_note_on_reg;
 reg [6:0] echo_note_reg;
@@ -1973,7 +1973,7 @@ echo_gen psg_echo_gen (
 	.echo_cc1 (psg_echo_cc1_reg)
 );
 
-reg [3:0] blip[0:15];
+/*reg [3:0] blip[0:15];
 blip_gen blip_gen (
 	.en (blip_en),
 	.clk (clk),
@@ -1994,7 +1994,7 @@ blip_gen blip_gen3 (
 	.note_on (note_on_reg[wav_channel]),
 	.note_start (note_reg[wav_channel]),
 	.blip_out (blip[wav_channel])
-);
+);*/
 
 wire signed [15:0] audio_l1;
 wire signed [15:0] audio_r1;
