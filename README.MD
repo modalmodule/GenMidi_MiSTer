@@ -1,7 +1,7 @@
 ![](https://github.com/modalmodule/GenMidi_MiSTer/blob/main/GenMidiscreenie.png)
 # GenMidi core for [MiSTer FPGA](https://mister-devel.github.io/MkDocs_MiSTer/)
 
-A sound module/synthesizer for sending midi data to the sound hardware of the Sega Genesis/Mega Drive, utilizing jt12/jt89 and misc other related modules by Jose Tejada Gomez, and using code from Input Tester by JimmyStones (see below), as well as from ADCTest by David Shadoff.
+A sound module/synthesizer for sending midi data to the sound hardware of the Sega Genesis/Mega Drive, utilizing jt12/jt89 and misc other related modules by Jose Tejada Gomez, genesis_lpf/audio_iir_filter by Gregory Hogan, and using code from Input Tester by JimmyStones (see below), as well as from ADCTest by David Shadoff.
 
 ## Features
 
@@ -57,6 +57,8 @@ Midi Capability Details:
 - Program Change messages select the patch from the patch bank based on their value - 1 (midi data starts at 0 despite user facing data showing 1) for anything > 1, and revert to OSD choice for 1 (like GamePad L and R). This is *per Midi Channel*, as in Midi channel 1 program change message will affect FM0, 2 affects FM1 etc.
 
 Note the lowest usable note for PSG is A3 (1 octave+ below middle C), any lower and things get... funny. Meanwhile FM can go all the way to what would be C-1, but is mapped through the data display as C0.
+
+OSD Settings can be saved with "Save Settings" on OSD second screen (press right from main screen), however this doesn't save any custom TFIs or Patch Bank, but I will implement a separate "save state" feature for those (thanks @tsc for the question that led to the idea for this).
 
 This is in active development so expect to see more from it in the future! :)
 
